@@ -52,7 +52,7 @@ Follow these steps to set up the project environment.
 ### 1. Clone the Repository
 Clone this repository to your local machine:
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/ksawesome/llm-harness
 cd llm-harness
 ````
 
@@ -138,10 +138,10 @@ The script will generate a single CSV file for each run inside the `results/raw_
 
 ### Data Analysis
 
-Once you have collected your data (including the human evaluation scores in a separate CSV), you can use the analysis scripts:
+Once you have collected the data (including the human evaluation scores in a separate CSV), you can use the analysis scripts:
 
-  * **`analysis/statistical_test.py`**: A Python script to run the statistical tests (Cohen's Kappa, Wilcoxon signed-rank) as defined in your research plan.
-  * **`analysis/generate_visualizations.ipynb`**: A Jupyter Notebook to process the final data and generate the radar chart, scatterplot, and CDF plot for your paper.
+  * **`analysis/statistical_test.py`**: A Python script to run the statistical tests (Cohen's Kappa, Wilcoxon signed-rank) as defined in the research plan.
+  * **`analysis/generate_visualizations.ipynb`**: A Jupyter Notebook to process the final data and generate the radar chart, scatterplot, and CDF plot.
 
 <!-- end list -->
 
