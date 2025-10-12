@@ -74,12 +74,18 @@ def analyze_model_performance(df_merged):
 
     # Perform pairwise tests
     for model1, model2 in model_pairs:
-        scores1 = df_merged[df_merged["model"] == model1]["pedagogical_quality"]
-        scores2 = df_merged[df_merged["model"] == model2]["pedagogical_quality"]
+        scores1 = df_merged[df_merged["model"] == model1][
+            "pedagogical_quality"
+        ]
+        scores2 = df_merged[df_merged["model"] == model2][
+            "pedagogical_quality"
+        ]
 
         # The prompts are the same for both models, making the samples related
         stat, p_value = wilcoxon(scores1, scores2)
-        results.append({"model1": model1, "model2": model2, "p_value": p_value})
+        results.append(
+            {"model1": model1, "model2": model2, "p_value": p_value}
+        )
 
     if not results:
         print("No model pairs to compare.")
@@ -100,8 +106,12 @@ def analyze_model_performance(df_merged):
         # Calculate effect size if significant
         effect_size = "N/A"
         if reject[i]:
-            scores1 = df_merged[df_merged["model"] == model1]["pedagogical_quality"]
-            scores2 = df_merged[df_merged["model"] == model2]["pedagogical_quality"]
+            scores1 = df_merged[df_merged["model"] == model1][
+                "pedagogical_quality"
+            ]
+            scores2 = df_merged[df_merged["model"] == model2][
+                "pedagogical_quality"
+            ]
             d = cohen_d(scores1, scores2)
             effect_size = f"{d:.4f}"
 

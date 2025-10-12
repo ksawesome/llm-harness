@@ -4,9 +4,7 @@ import requests
 
 # --- 1. DEFINE MODEL AND API DETAILS ---
 # The specific model endpoint for Llama 3 8B Instruct
-API_URL = (
-    "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
-)
+API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
 
 # --- 2. DEFINE PRICING ---
 # IMPORTANT: This is an ESTIMATE for a hosted provider. The free Hugging Face API has no direct cost,
@@ -16,7 +14,9 @@ PRICE_PER_1M_INPUT_TOKENS = 0.20  # in USD (Example price)
 PRICE_PER_1M_OUTPUT_TOKENS = 0.20  # in USD (Example price)
 
 
-def call_huggingface_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+def call_huggingface_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
     """
     Makes an API call to the Hugging Face Inference API for Llama 3.
     This function adheres to the standardized adapter interface.
@@ -93,7 +93,9 @@ def call_huggingface_api(model_name: str, prompt_text: str, system_prompt: str) 
         }
 
     except requests.exceptions.HTTPError as http_err:
-        error_message = f"HTTP error occurred: {http_err} - Response: {response.text}"
+        error_message = (
+            f"HTTP error occurred: {http_err} - Response: {response.text}"
+        )
         return {
             "model_version": model_name,
             "latency_ms": latency_ms if "latency_ms" in locals() else 0,

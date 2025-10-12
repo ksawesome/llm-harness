@@ -66,7 +66,8 @@ async def run_benchmark(args):
         handlers=[
             logging.FileHandler(
                 os.path.join(
-                    "logs", f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+                    "logs",
+                    f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
                 )
             ),
             logging.StreamHandler(),
@@ -142,7 +143,9 @@ async def run_benchmark(args):
 
     # Generate a unique filename with a timestamp
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_filename = os.path.join(output_dir, f"benchmark_results_{timestamp}.csv")
+    output_filename = os.path.join(
+        output_dir, f"benchmark_results_{timestamp}.csv"
+    )
     temp_filename = output_filename + ".tmp"
 
     # Create an empty DataFrame with the correct columns based on your paper's appendix
@@ -165,9 +168,13 @@ async def run_benchmark(args):
     logger.info(f"Logging results to {output_filename}")
 
     # --- 4. MAIN BENCHMARKING LOOP ---
-    rate_limiters = {adapter: RateLimiter(10.0) for adapter in models_to_run.values()}
+    rate_limiters = {
+        adapter: RateLimiter(10.0) for adapter in models_to_run.values()
+    }
 
-    async def call_model_with_rate_limit(model_name, adapter_function, prompt_text):
+    async def call_model_with_rate_limit(
+        model_name, adapter_function, prompt_text
+    ):
         limiter = rate_limiters[adapter_function]
         await limiter.acquire()
         try:
@@ -178,7 +185,9 @@ async def run_benchmark(args):
                 system_prompt=system_prompt_text,
             )
         except Exception as e:
-            logger.error(f"Exception occurred while calling API for {model_name}: {e}")
+            logger.error(
+                f"Exception occurred while calling API for {model_name}: {e}"
+            )
             response_dict = {
                 "model_version": "N/A",
                 "latency_ms": 0,
@@ -197,9 +206,7 @@ async def run_benchmark(args):
             prompt_text = prompt_data["prompt_text"]
 
             if prompt_data.get("teacher_context"):
-                full_prompt = (
-                    f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
-                )
+                full_prompt = f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
             else:
                 full_prompt = prompt_text
 
@@ -219,7 +226,9 @@ async def run_benchmark(args):
             for model_name, response_dict in results:
                 response_text = response_dict.get("response_text", "")
                 response_length = (
-                    len(response_text) if not response_dict.get("error_message") else 0
+                    len(response_text)
+                    if not response_dict.get("error_message")
+                    else 0
                 )
                 log_entry = {
                     "prompt_id": prompt_id,
@@ -249,7 +258,9 @@ async def run_benchmark(args):
 
 if __name__ == "__main__":
     # --- 5. ARGUMENT PARSING for flexibility ---
-    parser = argparse.ArgumentParser(description="Run the LLM Benchmarking Harness.")
+    parser = argparse.ArgumentParser(
+        description="Run the LLM Benchmarking Harness."
+    )
     parser.add_argument(
         "--model",
         type=str,
@@ -261,7 +272,11 @@ if __name__ == "__main__":
         type=str,
         default="strict_socratic",
         help="Specify which system prompt to use for the run.",
-        choices=["strict_socratic", "neutral_instruction", "hybrid_conversational"],
+        choices=[
+            "strict_socratic",
+            "neutral_instruction",
+            "hybrid_conversational",
+        ],
     )
     parser.add_argument(
         "--dry-run",

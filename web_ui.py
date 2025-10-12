@@ -26,7 +26,8 @@ def results(filename):
             "results.html",
             tables=[
                 df.to_html(
-                    classes="table table-striped table-hover", table_id="results-table"
+                    classes="table table-striped table-hover",
+                    table_id="results-table",
                 )
             ],
             filename=filename,

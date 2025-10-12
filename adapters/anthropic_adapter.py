@@ -8,8 +8,10 @@ from tenacity import (
 )
 
 # --- 1. INITIALIZE THE CLIENT ---
-# The API key is loaded from the .env file in main.py and set as an environment variable.
-# The Anthropic client automatically reads the ANTHROPIC_API_KEY environment variable.
+# The API key is loaded from the .env file in main.py and set as an
+# environment variable.
+# The Anthropic client automatically reads the ANTHROPIC_API_KEY
+# environment variable.
 try:
     client = anthropic.Anthropic()
 except Exception as e:
@@ -18,7 +20,8 @@ except Exception as e:
 
 # --- 2. DEFINE PRICING (as of Q4 2025, from your paper's context) ---
 # It's good practice to keep pricing explicit for cost calculations.
-# Replace with the actual pricing for claude-3-sonnet-20240229 when you run the final benchmark.
+# Replace with the actual pricing for claude-3-sonnet-20240229 when
+# you run the final benchmark.
 PRICE_PER_1M_INPUT_TOKENS = 3.00  # in USD
 PRICE_PER_1M_OUTPUT_TOKENS = 15.00  # in USD
 
@@ -28,7 +31,9 @@ PRICE_PER_1M_OUTPUT_TOKENS = 15.00  # in USD
     wait=wait_exponential(multiplier=1, min=4, max=60),
     retry=retry_if_exception_type(anthropic.APIError),
 )
-def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+def call_anthropic_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
     """
     Makes an API call to the specified Anthropic model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.

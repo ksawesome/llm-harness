@@ -15,7 +15,8 @@ from .cohere_adapter import call_cohere_api
 from .huggingface_adapter import call_huggingface_api
 
 # The __all__ list defines the public API for this package.
-# When a user performs 'from adapters import *', only these names will be imported.
+# When a user performs 'from adapters import *', only these names
+# will be imported.
 __all__ = [
     "call_openai_api",
     "call_anthropic_api",

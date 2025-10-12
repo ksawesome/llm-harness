@@ -38,7 +38,9 @@ def test_call_openai_api_client_none():
 def test_call_openai_api_exception():
     """Test handling of API exceptions."""
     with patch("adapters.openai_adapter.client") as mock_client:
-        mock_client.chat.completions.create.side_effect = Exception("API Error")
+        mock_client.chat.completions.create.side_effect = Exception(
+            "API Error"
+        )
 
         result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
 

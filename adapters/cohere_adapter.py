@@ -21,7 +21,9 @@ PRICE_PER_1M_INPUT_TOKENS = 0.50  # in USD
 PRICE_PER_1M_OUTPUT_TOKENS = 1.50  # in USD
 
 
-def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+def call_cohere_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
     """
     Makes an API call to the specified Cohere model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.

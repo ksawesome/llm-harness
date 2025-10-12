@@ -21,7 +21,9 @@ PRICE_PER_1M_INPUT_TOKENS = 0.35  # in USD
 PRICE_PER_1M_OUTPUT_TOKENS = 1.05  # in USD
 
 
-def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+def call_google_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
     """
     Makes an API call to the specified Google Gemini model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.
@@ -65,7 +67,9 @@ def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> di
         # The Google API requires separate calls to count tokens.
         tokens_in = model.count_tokens(prompt_text).total_tokens
         tokens_out = model.count_tokens(response_text).total_tokens
-        model_version = model_name  # The response doesn't include a version identifier
+        model_version = (
+            model_name  # The response doesn't include a version identifier
+        )
 
         # --- 7. CALCULATE THE COST ---
         cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (

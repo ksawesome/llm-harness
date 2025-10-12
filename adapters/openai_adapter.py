@@ -28,7 +28,9 @@ PRICE_PER_1M_OUTPUT_TOKENS = 0.60  # in USD
     wait=wait_exponential(multiplier=1, min=4, max=60),
     retry=retry_if_exception_type((APIError, RateLimitError)),
 )
-def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+def call_openai_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
     """
     Makes an API call to the specified OpenAI model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.
@@ -83,7 +85,9 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_in": tokens_in,
             "tokens_out": tokens_out,
             "cost_usd": cost_usd,
-            "response_text": response_text.strip() if response_text is not None else "",
+            "response_text": (
+                response_text.strip() if response_text is not None else ""
+            ),
             "error_message": None,
         }
 

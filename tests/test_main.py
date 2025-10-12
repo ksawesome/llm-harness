@@ -8,7 +8,9 @@ from main import load_data
 def test_load_data_success():
     """Test successful loading of JSON data."""
     test_data = {"key": "value", "number": 42}
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False
+    ) as f:
         json.dump(test_data, f)
         temp_path = f.name
 
@@ -27,7 +29,9 @@ def test_load_data_file_not_found():
 
 def test_load_data_invalid_json():
     """Test handling of invalid JSON."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False
+    ) as f:
         f.write("invalid json content")
         temp_path = f.name
 
