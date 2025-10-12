@@ -1,6 +1,7 @@
 import pytest
 from models_config import ModelConfig, models_to_test
 
+
 def test_model_config_validation():
     """Test that ModelConfig validates correctly."""
     config = ModelConfig(
@@ -8,12 +9,13 @@ def test_model_config_validation():
         adapter=lambda: None,  # Dummy adapter
         rate_limit_seconds=5.0,
         timeout_seconds=60,
-        temperature=0.5
+        temperature=0.5,
     )
     assert config.name == "test-model"
     assert config.rate_limit_seconds == 5.0
     assert config.timeout_seconds == 60
     assert config.temperature == 0.5
+
 
 def test_models_to_test_structure():
     """Test that models_to_test has expected structure."""

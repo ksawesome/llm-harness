@@ -1,6 +1,11 @@
 import os
 import time
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 from openai import OpenAI, APIError, RateLimitError
 
 # --- 1. INITIALIZE THE CLIENT ---
@@ -16,13 +21,13 @@ except Exception as e:
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for gpt-4o-mini when you run the final benchmark.
 PRICE_PER_1M_INPUT_TOKENS = 0.15  # in USD
-PRICE_PER_1M_OUTPUT_TOKENS = 0.60 # in USD
+PRICE_PER_1M_OUTPUT_TOKENS = 0.60  # in USD
 
 
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=4, max=60),
-    retry=retry_if_exception_type((APIError, RateLimitError))
+    retry=retry_if_exception_type((APIError, RateLimitError)),
 )
 def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
     """
@@ -37,7 +42,7 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": "OpenAI client failed to initialize."
+            "error_message": "OpenAI client failed to initialize.",
         }
 
     try:
@@ -48,12 +53,12 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             model=model_name,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt_text}
+                {"role": "user", "content": prompt_text},
             ],
-            temperature=0.3, # Using the balanced setting from the paper's temp sweep
-            max_tokens=500   # As specified in the paper's pseudo-code
+            temperature=0.3,  # Using the balanced setting from the paper's temp sweep
+            max_tokens=500,  # As specified in the paper's pseudo-code
         )
-        
+
         end_time = time.perf_counter()
         latency_ms = (end_time - start_time) * 1000
 
@@ -68,9 +73,8 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             tokens_out = 0
 
         # --- 5. CALCULATE THE COST ---
-        cost_usd = (
-            (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) +
-            (tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS)
+        cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (
+            tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS
         )
 
         # --- 6. RETURN STANDARDIZED DICTIONARY ---
@@ -81,7 +85,7 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": tokens_out,
             "cost_usd": cost_usd,
             "response_text": response_text.strip() if response_text is not None else "",
-            "error_message": None
+            "error_message": None,
         }
 
     except Exception as e:
@@ -93,5 +97,5 @@ def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": str(e)
+            "error_message": str(e),
         }

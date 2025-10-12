@@ -7,6 +7,7 @@ from itertools import combinations
 
 # --- Helper Functions ---
 
+
 def cohen_d(group1, group2):
     """Calculates Cohen's d for independent samples."""
     # Calculate the size of samples
@@ -20,7 +21,9 @@ def cohen_d(group1, group2):
     # Calculate the effect size
     return (u1 - u2) / s
 
+
 # --- Main Analysis Functions ---
+
 
 def analyze_inter_rater_reliability(df_human_raw):
     """
@@ -29,19 +32,21 @@ def analyze_inter_rater_reliability(df_human_raw):
     with columns: [response_id, rater_id, pedagogical_quality, contextual_fidelity]
     """
     print("\n--- 1. Inter-Rater Reliability Analysis (Cohen's Kappa) ---")
-    
+
     # Pivot the table to get raters' scores side-by-side for each response
-    pivot_df = df_human_raw.pivot(index='response_id', columns='rater_id', values='pedagogical_quality').dropna()
-    
+    pivot_df = df_human_raw.pivot(
+        index="response_id", columns="rater_id", values="pedagogical_quality"
+    ).dropna()
+
     if len(pivot_df.columns) < 2:
         print("Not enough raters to calculate reliability. Need at least 2.")
         return
 
     rater1_scores = pivot_df.iloc[:, 0]
     rater2_scores = pivot_df.iloc[:, 1]
-    
+
     kappa = cohen_kappa_score(rater1_scores, rater2_scores)
-    
+
     print(f"Cohen's Kappa for Pedagogical Quality: {kappa:.4f}")
     if kappa > 0.81:
         print("Result: Almost perfect agreement. The rubric is very reliable.")
@@ -58,45 +63,52 @@ def analyze_model_performance(df_merged):
     Performs pairwise Wilcoxon signed-rank tests to compare model performance.
     Adjusts p-values using the Benjamini-Hochberg procedure.
     """
-    print("\n--- 2. Comparative Model Performance Analysis (Wilcoxon Signed-Rank Test) ---")
-    
-    models = df_merged['model'].unique()
+    print(
+        "\n--- 2. Comparative Model Performance Analysis (Wilcoxon Signed-Rank Test) ---"
+    )
+
+    models = df_merged["model"].unique()
     model_pairs = list(combinations(models, 2))
-    
+
     results = []
-    
+
     # Perform pairwise tests
     for model1, model2 in model_pairs:
-        scores1 = df_merged[df_merged['model'] == model1]['pedagogical_quality']
-        scores2 = df_merged[df_merged['model'] == model2]['pedagogical_quality']
-        
+        scores1 = df_merged[df_merged["model"] == model1]["pedagogical_quality"]
+        scores2 = df_merged[df_merged["model"] == model2]["pedagogical_quality"]
+
         # The prompts are the same for both models, making the samples related
         stat, p_value = wilcoxon(scores1, scores2)
-        results.append({'model1': model1, 'model2': model2, 'p_value': p_value})
-        
+        results.append({"model1": model1, "model2": model2, "p_value": p_value})
+
     if not results:
         print("No model pairs to compare.")
         return
-        
-    p_values = [res['p_value'] for res in results]
-    
+
+    p_values = [res["p_value"] for res in results]
+
     # Adjust for multiple comparisons
-    reject, p_values_adjusted, _, _ = multipletests(p_values, alpha=0.05, method='fdr_bh')
-    
+    reject, p_values_adjusted, _, _ = multipletests(
+        p_values, alpha=0.05, method="fdr_bh"
+    )
+
     print("\nPairwise Comparison of Pedagogical Quality:")
     for i, res in enumerate(results):
-        model1, model2 = res['model1'], res['model2']
+        model1, model2 = res["model1"], res["model2"]
         is_significant = "YES" if reject[i] else "NO"
-        
+
         # Calculate effect size if significant
         effect_size = "N/A"
         if reject[i]:
-             scores1 = df_merged[df_merged['model'] == model1]['pedagogical_quality']
-             scores2 = df_merged[df_merged['model'] == model2]['pedagogical_quality']
-             d = cohen_d(scores1, scores2)
-             effect_size = f"{d:.4f}"
-        
-        print(f"- {model1:18} vs. {model2:18} | Adjusted p-value: {p_values_adjusted[i]:.4f} | Significant? {is_significant:3} | Cohen's d: {effect_size}")
+            scores1 = df_merged[df_merged["model"] == model1]["pedagogical_quality"]
+            scores2 = df_merged[df_merged["model"] == model2]["pedagogical_quality"]
+            d = cohen_d(scores1, scores2)
+            effect_size = f"{d:.4f}"
+
+        print(
+            f"- {model1:18} vs. {model2:18} | Adjusted p-value: {p_values_adjusted[i]:.4f} | Significant? {is_significant:3} | Cohen's d: {effect_size}"
+        )
+
 
 # --- Main Execution Block ---
 
@@ -112,24 +124,29 @@ if __name__ == "__main__":
     # merged_df = pd.read_csv('../results/processed/merged_results.csv')
 
     # For now, we'll create placeholder data that mirrors your required structure.
-    models_list = ['GPT-4o mini', 'Claude 3 Sonnet', 'Gemini 1.5 Flash', 'Command R', 'Llama 3 8B']
-    
+    models_list = [
+        "GPT-4o mini",
+        "Claude 3 Sonnet",
+        "Gemini 1.5 Flash",
+        "Command R",
+        "Llama 3 8B",
+    ]
+
     # Placeholder for inter-rater reliability
     human_raw_data = {
-        'response_id': list(range(50)) * 2,
-        'rater_id': ['rater_A'] * 50 + ['rater_B'] * 50,
-        'pedagogical_quality': np.random.randint(1, 6, 100),
-        'contextual_fidelity': np.random.randint(1, 6, 100)
+        "response_id": list(range(50)) * 2,
+        "rater_id": ["rater_A"] * 50 + ["rater_B"] * 50,
+        "pedagogical_quality": np.random.randint(1, 6, 100),
+        "contextual_fidelity": np.random.randint(1, 6, 100),
     }
     human_raw_df = pd.DataFrame(human_raw_data)
-    
+
     # Placeholder for merged data
     merged_data = {
-        'model': np.repeat(models_list, 50),
-        'pedagogical_quality': np.random.normal(3, 1, 250)
+        "model": np.repeat(models_list, 50),
+        "pedagogical_quality": np.random.normal(3, 1, 250),
     }
     merged_df = pd.DataFrame(merged_data)
-
 
     # --- Run the Analyses ---
     analyze_inter_rater_reliability(human_raw_df)

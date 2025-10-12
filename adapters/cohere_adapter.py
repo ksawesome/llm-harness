@@ -18,7 +18,7 @@ except Exception as e:
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for command-r when you run the final benchmark.
 PRICE_PER_1M_INPUT_TOKENS = 0.50  # in USD
-PRICE_PER_1M_OUTPUT_TOKENS = 1.50 # in USD
+PRICE_PER_1M_OUTPUT_TOKENS = 1.50  # in USD
 
 
 def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
@@ -34,7 +34,7 @@ def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": "Cohere client failed to initialize."
+            "error_message": "Cohere client failed to initialize.",
         }
 
     try:
@@ -46,9 +46,9 @@ def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             model=model_name,
             preamble=system_prompt,
             message=prompt_text,
-            temperature=0.3 # Using the balanced setting from your paper's temp sweep
+            temperature=0.3,  # Using the balanced setting from your paper's temp sweep
         )
-        
+
         end_time = time.perf_counter()
         latency_ms = (end_time - start_time) * 1000
 
@@ -65,11 +65,9 @@ def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> di
         if meta and getattr(meta, "api_version", None):
             model_version = getattr(meta.api_version, "version", model_name)
 
-
         # --- 5. CALCULATE THE COST ---
-        cost_usd = (
-            (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) +
-            (tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS)
+        cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (
+            tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS
         )
 
         # --- 6. RETURN STANDARDIZED DICTIONARY ---
@@ -80,7 +78,7 @@ def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": tokens_out,
             "cost_usd": cost_usd,
             "response_text": response_text.strip(),
-            "error_message": None
+            "error_message": None,
         }
 
     except Exception as e:
@@ -92,5 +90,5 @@ def call_cohere_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": str(e)
+            "error_message": str(e),
         }

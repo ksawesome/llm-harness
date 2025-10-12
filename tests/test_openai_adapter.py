@@ -12,7 +12,7 @@ def test_call_openai_api_success():
     mock_response.usage.prompt_tokens = 10
     mock_response.usage.completion_tokens = 20
 
-    with patch('adapters.openai_adapter.client') as mock_client:
+    with patch("adapters.openai_adapter.client") as mock_client:
         mock_client.chat.completions.create.return_value = mock_response
 
         result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
@@ -28,7 +28,7 @@ def test_call_openai_api_success():
 
 def test_call_openai_api_client_none():
     """Test when OpenAI client is not initialized."""
-    with patch('adapters.openai_adapter.client', None):
+    with patch("adapters.openai_adapter.client", None):
         result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
 
         assert result["model_version"] == "N/A"
@@ -38,7 +38,7 @@ def test_call_openai_api_client_none():
 
 def test_call_openai_api_exception():
     """Test handling of API exceptions."""
-    with patch('adapters.openai_adapter.client') as mock_client:
+    with patch("adapters.openai_adapter.client") as mock_client:
         mock_client.chat.completions.create.side_effect = Exception("API Error")
 
         result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")

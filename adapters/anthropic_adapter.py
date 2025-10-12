@@ -1,7 +1,12 @@
 import os
 import time
 import anthropic
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 
 # --- 1. INITIALIZE THE CLIENT ---
 # The API key is loaded from the .env file in main.py and set as an environment variable.
@@ -16,13 +21,13 @@ except Exception as e:
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for claude-3-sonnet-20240229 when you run the final benchmark.
 PRICE_PER_1M_INPUT_TOKENS = 3.00  # in USD
-PRICE_PER_1M_OUTPUT_TOKENS = 15.00 # in USD
+PRICE_PER_1M_OUTPUT_TOKENS = 15.00  # in USD
 
 
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=4, max=60),
-    retry=retry_if_exception_type(anthropic.APIError)
+    retry=retry_if_exception_type(anthropic.APIError),
 )
 def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
     """
@@ -37,9 +42,9 @@ def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) ->
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": "Anthropic client failed to initialize."
+            "error_message": "Anthropic client failed to initialize.",
         }
-        
+
     try:
         # --- 3. MAKE THE API CALL ---
         start_time = time.perf_counter()
@@ -47,13 +52,11 @@ def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) ->
         response = client.messages.create(
             model=model_name,
             system=system_prompt,
-            messages=[
-                {"role": "user", "content": prompt_text}
-            ],
-            temperature=0.3, # Using the balanced setting from your paper's temp sweep
-            max_tokens=500   # As specified in your paper's pseudo-code
+            messages=[{"role": "user", "content": prompt_text}],
+            temperature=0.3,  # Using the balanced setting from your paper's temp sweep
+            max_tokens=500,  # As specified in your paper's pseudo-code
         )
-        
+
         end_time = time.perf_counter()
         latency_ms = (end_time - start_time) * 1000
 
@@ -62,18 +65,15 @@ def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) ->
         # Concatenate all text blocks in response.content
         # Only concatenate text from blocks of type TextBlock
         response_text = "".join(
-            block.text
-            for block in response.content
-            if block.type == "text"
+            block.text for block in response.content if block.type == "text"
         )
         model_version = response.model
         tokens_in = response.usage.input_tokens
         tokens_out = response.usage.output_tokens
 
         # --- 5. CALCULATE THE COST ---
-        cost_usd = (
-            (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) +
-            (tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS)
+        cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (
+            tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS
         )
 
         # --- 6. RETURN STANDARDIZED DICTIONARY ---
@@ -84,7 +84,7 @@ def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) ->
             "tokens_out": tokens_out,
             "cost_usd": cost_usd,
             "response_text": response_text.strip(),
-            "error_message": None
+            "error_message": None,
         }
 
     except Exception as e:
@@ -96,5 +96,5 @@ def call_anthropic_api(model_name: str, prompt_text: str, system_prompt: str) ->
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": str(e)
+            "error_message": str(e),
         }

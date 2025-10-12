@@ -18,7 +18,7 @@ except Exception as e:
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for gemini-1.5-flash-latest when you run the final benchmark.
 PRICE_PER_1M_INPUT_TOKENS = 0.35  # in USD
-PRICE_PER_1M_OUTPUT_TOKENS = 1.05 # in USD
+PRICE_PER_1M_OUTPUT_TOKENS = 1.05  # in USD
 
 
 def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
@@ -34,43 +34,42 @@ def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": "Google GenAI client failed to initialize."
+            "error_message": "Google GenAI client failed to initialize.",
         }
-        
+
     try:
         # --- 3. PREPARE THE MODEL ---
-        model = genai.GenerativeModel( # type: ignore
-            model_name=model_name,
-            system_instruction=system_prompt
+        model = genai.GenerativeModel(  # type: ignore
+            model_name=model_name, system_instruction=system_prompt
         )
 
         # --- 4. PREPARE GENERATION CONFIG ---
         # Separating the generation config makes the code cleaner
-        generation_config = genai.types.GenerationConfig( # type: ignore
-            temperature=0.3,
-            max_output_tokens=500
+        generation_config = genai.types.GenerationConfig(  # type: ignore
+            temperature=0.3, max_output_tokens=500
         )
 
         # --- 5. MAKE THE API CALL ---
         start_time = time.perf_counter()
-        
-        response = model.generate_content(prompt_text, generation_config=generation_config)
-        
+
+        response = model.generate_content(
+            prompt_text, generation_config=generation_config
+        )
+
         end_time = time.perf_counter()
         latency_ms = (end_time - start_time) * 1000
-        
+
         response_text = response.text
 
         # --- 6. PARSE THE RESPONSE (GET TOKEN COUNTS) ---
         # The Google API requires separate calls to count tokens.
         tokens_in = model.count_tokens(prompt_text).total_tokens
         tokens_out = model.count_tokens(response_text).total_tokens
-        model_version = model_name # The response doesn't include a version identifier
+        model_version = model_name  # The response doesn't include a version identifier
 
         # --- 7. CALCULATE THE COST ---
-        cost_usd = (
-            (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) +
-            (tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS)
+        cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (
+            tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS
         )
 
         # --- 8. RETURN STANDARDIZED DICTIONARY ---
@@ -81,7 +80,7 @@ def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": tokens_out,
             "cost_usd": cost_usd,
             "response_text": response_text.strip(),
-            "error_message": None
+            "error_message": None,
         }
 
     except Exception as e:
@@ -93,6 +92,5 @@ def call_google_api(model_name: str, prompt_text: str, system_prompt: str) -> di
             "tokens_out": 0,
             "cost_usd": 0.0,
             "response_text": "",
-            "error_message": str(e)
+            "error_message": str(e),
         }
-

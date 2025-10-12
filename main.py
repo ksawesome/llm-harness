@@ -37,16 +37,18 @@ class RateLimiter:
                 now = time.monotonic()
             self._last_call = now
 
+
 # --- 1. SETUP AND CONFIGURATION ---
 def setup_environment():
     """Load environment variables from .env file."""
     load_dotenv()
     # No need to configure clients here, adapters will handle it.
 
+
 def load_data(file_path):
     """Load JSON data from a file."""
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError:
         print(f"Error: The file {file_path} was not found.")
@@ -54,6 +56,7 @@ def load_data(file_path):
     except json.JSONDecodeError:
         print(f"Error: The file {file_path} is not a valid JSON file.")
         exit()
+
 
 # --- 2. MAIN EXECUTION LOGIC ---
 async def run_benchmark(args):
@@ -63,24 +66,28 @@ async def run_benchmark(args):
     # Set up logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
+        format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
-            logging.FileHandler(os.path.join("logs", f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")),
-            logging.StreamHandler()
-        ]
+            logging.FileHandler(
+                os.path.join(
+                    "logs", f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+                )
+            ),
+            logging.StreamHandler(),
+        ],
     )
     logger = logging.getLogger(__name__)
 
     # Load the datasets
-    test_prompts = load_data('data/test_prompts.json')
-    system_prompts = load_data('data/system_prompts.json')
+    test_prompts = load_data("data/test_prompts.json")
+    system_prompts = load_data("data/system_prompts.json")
 
     # Handle prompt range
     if args.prompt_range:
         try:
-            if '-' in args.prompt_range:
-                start, end = map(int, args.prompt_range.split('-'))
-                selected_prompts = test_prompts[start-1:end]
+            if "-" in args.prompt_range:
+                start, end = map(int, args.prompt_range.split("-"))
+                selected_prompts = test_prompts[start - 1 : end]
             else:
                 idx = int(args.prompt_range) - 1
                 selected_prompts = [test_prompts[idx]]
@@ -93,7 +100,9 @@ async def run_benchmark(args):
     # Filter models if a specific one was requested via command line
     if args.model:
         if args.model not in models_to_test:
-            logger.error(f"Model '{args.model}' is not a valid choice. Available models are: {list(models_to_test.keys())}")
+            logger.error(
+                f"Model '{args.model}' is not a valid choice. Available models are: {list(models_to_test.keys())}"
+            )
             return
         # Create a new dictionary with only the selected model
         models_to_run = {args.model: models_to_test[args.model]}
@@ -104,7 +113,9 @@ async def run_benchmark(args):
     try:
         system_prompt_text = system_prompts[args.system_prompt]
     except KeyError:
-        logger.error(f"System prompt key '{args.system_prompt}' not found in system_prompts.json. Available keys: {list(system_prompts.keys())}")
+        logger.error(
+            f"System prompt key '{args.system_prompt}' not found in system_prompts.json. Available keys: {list(system_prompts.keys())}"
+        )
         return
 
     if args.dry_run:
@@ -116,11 +127,11 @@ async def run_benchmark(args):
 
     # Validate API keys for selected models
     required_keys = {
-        'gpt-4o-mini': 'OPENAI_API_KEY',
-        'claude-3-sonnet-20240229': 'ANTHROPIC_API_KEY',
-        'gemini-2.5-flash': 'GOOGLE_API_KEY',
-        'command-r-08-2024': 'COHERE_API_KEY',
-        'meta-llama-3-8b-instruct': 'HUGGINGFACE_API_KEY'
+        "gpt-4o-mini": "OPENAI_API_KEY",
+        "claude-3-sonnet-20240229": "ANTHROPIC_API_KEY",
+        "gemini-2.5-flash": "GOOGLE_API_KEY",
+        "command-r-08-2024": "COHERE_API_KEY",
+        "meta-llama-3-8b-instruct": "HUGGINGFACE_API_KEY",
     }
     for model in models_to_run.keys():
         key = required_keys.get(model)
@@ -139,11 +150,22 @@ async def run_benchmark(args):
     temp_filename = output_filename + ".tmp"
 
     # Create an empty DataFrame with the correct columns based on your paper's appendix
-    results_df = pd.DataFrame(columns=[
-        'prompt_id', 'model', 'model_version', 'date_time', 'latency_ms',
-        'tokens_in', 'tokens_out', 'cost_usd', 'response_text', 'error_message', 'response_length'
-    ])
-    results_df.to_csv(temp_filename, index=False) # Write header
+    results_df = pd.DataFrame(
+        columns=[
+            "prompt_id",
+            "model",
+            "model_version",
+            "date_time",
+            "latency_ms",
+            "tokens_in",
+            "tokens_out",
+            "cost_usd",
+            "response_text",
+            "error_message",
+            "response_length",
+        ]
+    )
+    results_df.to_csv(temp_filename, index=False)  # Write header
     logger.info(f"Logging results to {output_filename}")
 
     # --- 4. MAIN BENCHMARKING LOOP ---
@@ -157,25 +179,31 @@ async def run_benchmark(args):
                 adapter_function,
                 model_name=model_name,
                 prompt_text=prompt_text,
-                system_prompt=system_prompt_text
+                system_prompt=system_prompt_text,
             )
         except Exception as e:
             logger.error(f"Exception occurred while calling API for {model_name}: {e}")
             response_dict = {
-                'model_version': 'N/A', 'latency_ms': 0, 'tokens_in': 0,
-                'tokens_out': 0, 'cost_usd': 0.0, 'response_text': '',
-                'error_message': str(e)
+                "model_version": "N/A",
+                "latency_ms": 0,
+                "tokens_in": 0,
+                "tokens_out": 0,
+                "cost_usd": 0.0,
+                "response_text": "",
+                "error_message": str(e),
             }
         return model_name, response_dict
 
     total_tasks = len(selected_prompts) * len(models_to_run)
     with tqdm(total=total_tasks, desc="Benchmarking Progress") as pbar:
         for prompt_data in selected_prompts:
-            prompt_id = prompt_data['id']
-            prompt_text = prompt_data['prompt_text']
+            prompt_id = prompt_data["id"]
+            prompt_text = prompt_data["prompt_text"]
 
-            if prompt_data.get('teacher_context'):
-                full_prompt = f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
+            if prompt_data.get("teacher_context"):
+                full_prompt = (
+                    f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
+                )
             else:
                 full_prompt = prompt_text
 
@@ -183,7 +211,9 @@ async def run_benchmark(args):
 
             tasks = [
                 asyncio.create_task(
-                    call_model_with_rate_limit(model_name, adapter_function, full_prompt)
+                    call_model_with_rate_limit(
+                        model_name, adapter_function, full_prompt
+                    )
                 )
                 for model_name, adapter_function in models_to_run.items()
             ]
@@ -191,22 +221,28 @@ async def run_benchmark(args):
             results = await asyncio.gather(*tasks)
 
             for model_name, response_dict in results:
-                response_text = response_dict.get('response_text', '')
-                response_length = len(response_text) if not response_dict.get('error_message') else 0
+                response_text = response_dict.get("response_text", "")
+                response_length = (
+                    len(response_text) if not response_dict.get("error_message") else 0
+                )
                 log_entry = {
-                    'prompt_id': prompt_id,
-                    'model': model_name,
+                    "prompt_id": prompt_id,
+                    "model": model_name,
                     **response_dict,
-                    'response_length': response_length,
-                    'date_time': datetime.now().isoformat(),
+                    "response_length": response_length,
+                    "date_time": datetime.now().isoformat(),
                 }
 
-                pd.DataFrame([log_entry]).to_csv(temp_filename, mode='a', header=False, index=False)
+                pd.DataFrame([log_entry]).to_csv(
+                    temp_filename, mode="a", header=False, index=False
+                )
 
-                if response_dict.get('error_message'):
-                    logger.warning(f"{model_name}: ERROR - {response_dict['error_message']}")
+                if response_dict.get("error_message"):
+                    logger.warning(
+                        f"{model_name}: ERROR - {response_dict['error_message']}"
+                    )
                 else:
-                    latency = response_dict.get('latency_ms') or 0
+                    latency = response_dict.get("latency_ms") or 0
                     logger.info(f"{model_name}: completed in {latency:.0f} ms")
                 pbar.update(1)
 
@@ -222,29 +258,29 @@ if __name__ == "__main__":
         "--model",
         type=str,
         help="Run the benchmark for a single specified model.",
-        choices=list(models_to_test.keys())
+        choices=list(models_to_test.keys()),
     )
     parser.add_argument(
         "--system_prompt",
         type=str,
         default="strict_socratic",
         help="Specify which system prompt to use for the run.",
-        choices=["strict_socratic", "neutral_instruction", "hybrid_conversational"]
+        choices=["strict_socratic", "neutral_instruction", "hybrid_conversational"],
     )
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Perform a dry run without making API calls."
+        help="Perform a dry run without making API calls.",
     )
     parser.add_argument(
         "--prompt-range",
         type=str,
-        help="Specify a range of prompts to run, e.g., '1-5' or '3'."
+        help="Specify a range of prompts to run, e.g., '1-5' or '3'.",
     )
-    
+
     # Setup environment once
     setup_environment()
-    
+
     # Parse arguments and run main function
     args = parser.parse_args()
     asyncio.run(run_benchmark(args))
