@@ -98,7 +98,8 @@ async def run_benchmark(args):
     if args.model:
         if args.model not in models_to_test:
             logger.error(
-                f"Model '{args.model}' is not a valid choice. Available models are: {list(models_to_test.keys())}"
+                f"Model '{args.model}' is not a valid choice. "
+                f"Available models are: {list(models_to_test.keys())}"
             )
             return
         # Create a new dictionary with only the selected model
@@ -111,7 +112,8 @@ async def run_benchmark(args):
         system_prompt_text = system_prompts[args.system_prompt]
     except KeyError:
         logger.error(
-            f"System prompt key '{args.system_prompt}' not found in system_prompts.json. Available keys: {list(system_prompts.keys())}"
+            f"System prompt key '{args.system_prompt}' not found in "
+            f"system_prompts.json. Available keys: {list(system_prompts.keys())}"
         )
         return
 
@@ -148,7 +150,8 @@ async def run_benchmark(args):
     )
     temp_filename = output_filename + ".tmp"
 
-    # Create an empty DataFrame with the correct columns based on your paper's appendix
+    # Create an empty DataFrame with the correct columns based on your
+    # paper's appendix
     results_df = pd.DataFrame(
         columns=[
             "prompt_id",
@@ -206,7 +209,9 @@ async def run_benchmark(args):
             prompt_text = prompt_data["prompt_text"]
 
             if prompt_data.get("teacher_context"):
-                full_prompt = f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
+                full_prompt = (
+                    f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
+                )
             else:
                 full_prompt = prompt_text
 
@@ -244,7 +249,8 @@ async def run_benchmark(args):
 
                 if response_dict.get("error_message"):
                     logger.warning(
-                        f"{model_name}: ERROR - {response_dict['error_message']}"
+                        f"{model_name}: ERROR - "
+                        f"{response_dict['error_message']}"
                     )
                 else:
                     latency = response_dict.get("latency_ms") or 0

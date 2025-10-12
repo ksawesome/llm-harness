@@ -1,5 +1,6 @@
 # Model configuration for the LLM benchmarking harness
-# This file defines the models to test and their corresponding adapter functions.
+# This file defines the models to test and their corresponding
+# adapter functions.
 
 from pydantic import BaseModel, Field
 from typing import Dict, Callable, Optional
