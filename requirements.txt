@@ -1,1 +1,15 @@
-anthropiccoheregoogle-generativeaiopenaipandaspython-dotenvrequestsipykernelmatplotlibnumpyplotlyscikit-learnscipyseabornstatsmodels
+anthropic
+cohere
+google-generativeai
+openai
+pandas
+python-dotenv
+requests
+ipykernel
+matplotlib
+numpy
+plotly
+scikit-learn
+scipy
+seaborn
+statsmodels

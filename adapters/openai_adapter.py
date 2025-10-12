@@ -1,6 +1,7 @@
 import os
 import time
-from openai import OpenAI
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from openai import OpenAI, APIError, RateLimitError
 
 # --- 1. INITIALIZE THE CLIENT ---
 # The API key is loaded from .env in main.py and set as an environment variable
@@ -18,6 +19,11 @@ PRICE_PER_1M_INPUT_TOKENS = 0.15  # in USD
 PRICE_PER_1M_OUTPUT_TOKENS = 0.60 # in USD
 
 
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=4, max=60),
+    retry=retry_if_exception_type((APIError, RateLimitError))
+)
 def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
     """
     Makes an API call to the specified OpenAI model and returns a standardized dictionary.

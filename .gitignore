@@ -179,3 +179,52 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+.vscode/
+.history/
+
+data/
+logs/
+
+.conda/
+.envrc
+
+
+
+# Local virtual environment
+.local/
+venv/
+__pypackages__/
+.env
+.env.*
+.venv/
+.env.local
+.venv.local
+.env.*.local
+.envrc
+.env.*.local
+.local/
+# Local configuration files
+config.py
+config_*.py
+settings.py
+settings_*.py
+# Local secrets files
+secrets.py
+secrets_*.py
+*.secret
+*.secrets
+
+# Utility scripts
+check_models.py
+
+# Logs
+logs/
+*.log
+
+# Test coverage
+.coverage
+htmlcov/
+
+# Pre-commit
+.pre-commit-config.yaml.cache
