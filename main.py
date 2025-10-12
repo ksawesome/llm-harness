@@ -208,7 +208,7 @@ async def run_benchmark(args):
             prompt_text = prompt_data["prompt_text"]
 
             if prompt_data.get("teacher_context"):
-                context = prompt_data['teacher_context']
+                context = prompt_data["teacher_context"]
                 full_prompt = f"Context: {context}\n\n{prompt_text}"
             else:
                 full_prompt = prompt_text
