@@ -1,4 +1,3 @@
-import pytest
 from models_config import ModelConfig, models_to_test
 
 

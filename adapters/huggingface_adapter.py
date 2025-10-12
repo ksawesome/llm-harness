@@ -1,7 +1,6 @@
 import os
 import time
 import requests
-import json
 
 # --- 1. DEFINE MODEL AND API DETAILS ---
 # The specific model endpoint for Llama 3 8B Instruct

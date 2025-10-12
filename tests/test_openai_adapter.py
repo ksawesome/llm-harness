@@ -1,4 +1,3 @@
-import pytest
 from unittest.mock import patch, MagicMock
 from adapters.openai_adapter import call_openai_api
 

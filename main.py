@@ -9,11 +9,7 @@ import pandas as pd
 from datetime import datetime
 
 # Import the adapter functions from the adapters directory
-from adapters import call_openai_api
-from adapters import call_anthropic_api
-from adapters import call_cohere_api
-from adapters import call_google_api
-from adapters import call_huggingface_api
+# (functions are accessed via getattr on the adapters module)
 
 from dotenv import load_dotenv
 
