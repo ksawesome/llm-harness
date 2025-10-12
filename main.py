@@ -60,15 +60,13 @@ async def run_benchmark(args):
     Main function to run the benchmarking harness.
     """
     # Set up logging
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(
-                os.path.join(
-                    "logs",
-                    f"benchmark_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
-                )
+                os.path.join("logs", f"benchmark_{timestamp}.log")
             ),
             logging.StreamHandler(),
         ],
@@ -111,9 +109,10 @@ async def run_benchmark(args):
     try:
         system_prompt_text = system_prompts[args.system_prompt]
     except KeyError:
+        available_keys = list(system_prompts.keys())
         logger.error(
             f"System prompt key '{args.system_prompt}' not found in "
-            f"system_prompts.json. Available keys: {list(system_prompts.keys())}"
+            f"system_prompts.json. Available keys: {available_keys}"
         )
         return
 
@@ -209,7 +208,8 @@ async def run_benchmark(args):
             prompt_text = prompt_data["prompt_text"]
 
             if prompt_data.get("teacher_context"):
-                full_prompt = f"Context: {prompt_data['teacher_context']}\n\n{prompt_text}"
+                context = prompt_data['teacher_context']
+                full_prompt = f"Context: {context}\n\n{prompt_text}"
             else:
                 full_prompt = prompt_text
 

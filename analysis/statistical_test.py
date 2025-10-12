@@ -133,7 +133,8 @@ if __name__ == "__main__":
     # human_raw_df = pd.read_csv('../results/raw_output/human_scores_long_format.csv')
     # merged_df = pd.read_csv('../results/processed/merged_results.csv')
 
-    # For now, we'll create placeholder data that mirrors your required structure.
+    # For now, we'll create placeholder data that mirrors your required
+    # structure.
     models_list = [
         "GPT-4o mini",
         "Claude 3 Sonnet",
