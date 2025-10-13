@@ -67,9 +67,14 @@ llm-harness/
 |-- logs/                 # Application logs
 |-- results/              # Output directory
 |   |-- raw_output/           # CSV benchmark results
-|-- templates/            # Flask web UI templates
-|   |-- index.html            # Results dashboard
-|   |-- results.html          # Detailed results viewer
+|-- web/                  # Web interface and templates
+|   |-- templates/            # Flask web UI templates
+|   |   |-- dashboard.html         # Main dashboard page
+|   |   |-- index.html            # Results dashboard
+|   |   |-- results.html          # Detailed results viewer
+|   |   |-- run_details.html      # Run details page
+|   |-- dashboard.py          # Interactive web dashboard with charts
+|   |-- web_ui.py             # Modern Flask web interface
 |-- tests/                # Comprehensive test suite
 |   |-- __init__.py
 |   |-- test_main.py          # Core functionality tests
@@ -83,7 +88,6 @@ llm-harness/
 |-- .gitignore            # Git ignore rules
 |-- .pre-commit-config.yaml # Code quality hooks
 |-- check_models.py       # Model availability checker
-|-- dashboard.py          # Interactive web dashboard with charts
 |-- database.py           # SQLite database manager for results
 |-- main.py               # Main benchmarking script
 |-- manage_results.py     # Data cleanup and archiving utility
@@ -91,7 +95,6 @@ llm-harness/
 |-- pyproject.toml        # Project configuration
 |-- requirements.txt      # Dependencies
 |-- README.md             # This documentation
-|-- web_ui.py             # Modern Flask web interface
 ```
 
 ## ⚙️ Model Configuration
@@ -305,7 +308,7 @@ python main.py --model gemini-2.5-flash --system_prompt neutral_instruction --pr
 For a simple web interface to view results, run:
 
 ```bash
-python web_ui.py
+python web/web_ui.py
 ```
 
 Then open http://127.0.0.1:5000/ in your browser.
@@ -434,7 +437,7 @@ Launch the modern visualization dashboard for real-time analysis:
 
 ```bash
 # Start the dashboard server
-python dashboard.py
+python web/dashboard.py
 
 # Access at http://localhost:5000
 ```

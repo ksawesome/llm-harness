@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-RESULTS_DIR = "results/raw_output"
+RESULTS_DIR = "../results/raw_output"
 
 
 @app.route("/")

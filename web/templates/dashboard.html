@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LLM Benchmark Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.plotly.com/plotly-latest.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .stat-card { background: white; border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #007bff; }
+        .chart-container { background: white; border: 1px solid #ddd; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f8f9fa; }
+        .run-link { color: #007bff; text-decoration: none; }
+        .run-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LLM Benchmark Dashboard</h1>
+        <p>Monitor and analyze your language model benchmarks</p>
+    </div>
+
+    <div class="stats-grid" id="stats-container">
+        <!-- Stats will be loaded here -->
+    </div>
+
+    <div class="chart-container">
+        <h2>Model Performance</h2>
+        <div id="latency-chart"></div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Cost Analysis</h2>
+        <div id="cost-chart"></div>
+    </div>
+
+    <div class="chart-container">
+        <h2>Success Rates</h2>
+        <div id="success-chart"></div>
+    </div>
+
+    <script>
+        async function loadDashboard() {
+            try {
+                // Load stats
+                const statsResponse = await fetch('/api/model_stats/{{ latest_run }}');
+                const statsData = await statsResponse.json();
+
+                if (statsData.stats && statsData.stats.length > 0) {
+                    const container = document.getElementById('stats-container');
+                    container.innerHTML = statsData.stats.map(stat => `
+                        <div class="stat-card">
+                            <h3>${stat.model}</h3>
+                            <div class="stat-value">${stat.avg_latency.toFixed(0)}ms</div>
+                            <p>Avg Latency</p>
+                            <p>Success: ${stat.success_rate.toFixed(1)}%</p>
+                            <p>Cost: $${stat.total_cost.toFixed(4)}</p>
+                        </div>
+                    `).join('');
+                }
+
+                // Load charts
+                const chartsResponse = await fetch('/api/charts/{{ latest_run }}');
+                const chartsData = await chartsResponse.json();
+
+                if (chartsData.charts) {
+                    if (chartsData.charts.latency) {
+                        Plotly.newPlot('latency-chart', JSON.parse(chartsData.charts.latency).data, JSON.parse(chartsData.charts.latency).layout);
+                    }
+                    if (chartsData.charts.cost) {
+                        Plotly.newPlot('cost-chart', JSON.parse(chartsData.charts.cost).data, JSON.parse(chartsData.charts.cost).layout);
+                    }
+                    if (chartsData.charts.success_rate) {
+                        Plotly.newPlot('success-chart', JSON.parse(chartsData.charts.success_rate).data, JSON.parse(chartsData.charts.success_rate).layout);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            }
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+    </script>
+</body>
+</html>

@@ -4,10 +4,14 @@ Local web application for viewing and analyzing benchmark results.
 """
 
 import os
-import plotly.express as px
-from flask import Flask, render_template, jsonify
-from database import BenchmarkDatabase
-import logging
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+import plotly.express as px  # noqa: E402
+from flask import Flask, render_template, jsonify  # noqa: E402
+from database import BenchmarkDatabase  # noqa: E402
+import logging  # noqa: E402
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
