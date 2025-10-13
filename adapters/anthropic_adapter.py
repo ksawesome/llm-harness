@@ -18,6 +18,13 @@ except Exception as e:
     print(f"Error initializing Anthropic client: {e}")
     client = None
 
+# Supported Anthropic models
+SUPPORTED_MODELS = [
+    "claude-3-5-sonnet-20241022",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+]
+
 # --- 2. DEFINE PRICING (as of Q4 2025, from your paper's context) ---
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for claude-3-sonnet-20240229 when
@@ -38,6 +45,9 @@ def call_anthropic_api(
     Makes an API call to the specified Anthropic model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.
     """
+    if model_name not in SUPPORTED_MODELS:
+        print(f"Warning: Model '{model_name}' is not in the list of supported Anthropic models. It may be deprecated or invalid.")
+
     if not client:
         return {
             "model_version": "N/A",
@@ -47,6 +57,7 @@ def call_anthropic_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": "Anthropic client failed to initialize.",
+            "error_code": "INIT_FAILED",
         }
 
     try:
@@ -89,6 +100,7 @@ def call_anthropic_api(
             "cost_usd": cost_usd,
             "response_text": response_text.strip(),
             "error_message": None,
+            "error_code": None,
         }
 
     except Exception as e:
@@ -101,4 +113,5 @@ def call_anthropic_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": str(e),
+            "error_code": "API_ERROR",
         }

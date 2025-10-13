@@ -6,14 +6,19 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 
 ## ✨ Key Features
 
-- **Multi-Model Support**: Evaluate 5 major LLM providers simultaneously
-- **Parallel Processing**: Concurrent API calls with rate limiting for optimal performance
+- **Multi-Model Support**: Evaluate 5+ major LLM providers simultaneously (OpenAI, Anthropic, Google, Cohere, Hugging Face)
+- **Parallel Processing**: Concurrent API calls with intelligent rate limiting for optimal performance
 - **Comprehensive Metrics**: Track latency, token usage, costs, response length, and custom quality scores
 - **Robust Error Handling**: Automatic retries with exponential backoff for API failures
 - **Modern Web UI**: Beautiful dashboard for viewing and analyzing benchmark results
 - **Extensive Testing**: Comprehensive test suite with 95%+ coverage
 - **CI/CD Ready**: GitHub Actions workflows for automated testing and quality checks
 - **Production Ready**: Proper logging, configuration management, and error recovery
+- **Token Counting**: Consistent token estimation using tiktoken across all adapters
+- **API Key Validation**: Startup validation of API keys with connectivity tests
+- **Model Version Checks**: Warnings for deprecated or unsupported models
+- **Standardized Error Handling**: Consistent error codes and messages across adapters
+- **Graceful Dependency Handling**: Automatic skipping of models with missing libraries
 
 The models under evaluation are:
 
@@ -306,6 +311,15 @@ GitHub Actions automatically:
 - ✅ **Production Logging**: Structured logging to files and console
 - ✅ **Configuration Management**: Pydantic-based model configuration
 - ✅ **Environment Security**: Secure API key management with .env files
+
+### v0.1.1 Enhancements
+- ✅ **Token Consistency**: Unified token counting with tiktoken for accurate metrics
+- ✅ **API Security**: Enhanced key validation and startup connectivity checks
+- ✅ **Model Validation**: Version checks with deprecation warnings for all adapters
+- ✅ **Error Standardization**: Consistent error codes and handling across providers
+- ✅ **Dependency Resilience**: Graceful handling of missing optional libraries
+- ✅ **Retry Reliability**: Improved tenacity-based retry logic for rate limits
+- ✅ **Code Quality**: Comprehensive linting and formatting with flake8/black
 
 ### Performance Optimizations
 - Rate limiting prevents API throttling

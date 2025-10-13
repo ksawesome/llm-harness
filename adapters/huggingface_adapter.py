@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+import tiktoken
 
 # --- 1. DEFINE MODEL AND API DETAILS ---
 # The specific model endpoint for Llama 3 8B Instruct
@@ -31,6 +32,7 @@ def call_huggingface_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": "HUGGINGFACE_API_KEY environment variable not found.",
+            "error_code": "MISSING_API_KEY",
         }
 
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -76,10 +78,15 @@ def call_huggingface_api(
 
         # --- 7. HANDLE TOKEN COUNTS & COST ---
         # LIMITATION: The Hugging Face Serverless Inference API does not return token counts.
-        # This is a key finding for the benchmark. We will log 0 and note this limitation.
-        tokens_in = 0
-        tokens_out = 0
-        cost_usd = 0.0  # Cannot be calculated without token counts.
+        # This is a key finding for the benchmark. We will estimate using tiktoken.
+        try:
+            encoding = tiktoken.get_encoding("cl100k_base")  # Similar to Llama tokenization
+            tokens_in = len(encoding.encode(prompt_text))
+            tokens_out = len(encoding.encode(response_text))
+        except Exception:
+            tokens_in = 0
+            tokens_out = 0
+        cost_usd = 0.0  # Cannot be calculated without accurate token counts.
 
         # --- 8. RETURN STANDARDIZED DICTIONARY ---
         return {
@@ -90,6 +97,7 @@ def call_huggingface_api(
             "cost_usd": cost_usd,
             "response_text": response_text.strip(),
             "error_message": None,
+            "error_code": None,
         }
 
     except requests.exceptions.HTTPError as http_err:
@@ -104,6 +112,7 @@ def call_huggingface_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": error_message,
+            "error_code": "HTTP_ERROR",
         }
     except Exception as e:
         return {
@@ -114,4 +123,5 @@ def call_huggingface_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": str(e),
+            "error_code": "API_ERROR",
         }

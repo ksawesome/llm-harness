@@ -16,6 +16,15 @@ except Exception as e:
     print(f"Error initializing OpenAI client: {e}")
     client = None
 
+# Supported OpenAI models
+SUPPORTED_MODELS = [
+    "gpt-4o-mini",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-4",
+    "gpt-3.5-turbo",
+]
+
 # --- 2. DEFINE PRICING (as of Q4 2025) ---
 # It's good practice to keep pricing explicit for cost calculations.
 # Replace with the actual pricing for gpt-4o-mini when you run the final benchmark.
@@ -35,7 +44,12 @@ def call_openai_api(
     Makes an API call to the specified OpenAI model and returns a standardized dictionary.
     This function adheres to the standardized adapter interface.
     """
-    if not client:
+    if model_name not in SUPPORTED_MODELS:
+        print(
+            f"Warning: Model '{model_name}' is not in the list of supported OpenAI models. It may be deprecated or invalid."
+        )
+
+    if client is None:
         return {
             "model_version": "N/A",
             "latency_ms": 0,
@@ -44,6 +58,7 @@ def call_openai_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": "OpenAI client failed to initialize.",
+            "error_code": "INIT_FAILED",
         }
 
     try:
@@ -89,6 +104,7 @@ def call_openai_api(
                 response_text.strip() if response_text is not None else ""
             ),
             "error_message": None,
+            "error_code": None,
         }
 
     except Exception as e:
@@ -101,4 +117,5 @@ def call_openai_api(
             "cost_usd": 0.0,
             "response_text": "",
             "error_message": str(e),
+            "error_code": "API_ERROR",
         }

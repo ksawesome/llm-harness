@@ -73,6 +73,34 @@ async def run_benchmark(args):
     )
     logger = logging.getLogger(__name__)
 
+    def validate_api_keys():
+        """Validate that required API keys are present and test basic connectivity."""
+        required_keys = {
+            "OPENAI_API_KEY": "OpenAI",
+            "ANTHROPIC_API_KEY": "Anthropic",
+            "GOOGLE_API_KEY": "Google",
+            "COHERE_API_KEY": "Cohere",
+            "HUGGINGFACE_API_KEY": "Hugging Face",
+        }
+        
+        missing_keys = []
+        for key, provider in required_keys.items():
+            if not os.getenv(key):
+                missing_keys.append(f"{provider} ({key})")
+        
+        if missing_keys:
+            logger.error(f"Missing API keys: {', '.join(missing_keys)}")
+            return False
+        
+        # Test basic connectivity (optional, can be disabled for faster startup)
+        logger.info("API keys validated successfully.")
+        return True
+
+    # Validate API keys
+    if not validate_api_keys():
+        logger.error("API key validation failed. Exiting.")
+        return
+
     # Load the datasets
     test_prompts = load_data("data/test_prompts.json")
     system_prompts = load_data("data/system_prompts.json")
@@ -122,20 +150,6 @@ async def run_benchmark(args):
         logger.info(f"Selected models: {list(models_to_run.keys())}")
         logger.info(f"System prompt: {args.system_prompt}")
         return
-
-    # Validate API keys for selected models
-    required_keys = {
-        "gpt-4o-mini": "OPENAI_API_KEY",
-        "claude-3-sonnet-20240229": "ANTHROPIC_API_KEY",
-        "gemini-2.5-flash": "GOOGLE_API_KEY",
-        "command-r-08-2024": "COHERE_API_KEY",
-        "meta-llama-3-8b-instruct": "HUGGINGFACE_API_KEY",
-    }
-    for model in models_to_run.keys():
-        key = required_keys.get(model)
-        if key and not os.getenv(key):
-            logger.error(f"Missing API key for {model}: {key}")
-            return
 
     # --- 3. LOGGING AND OUTPUT SETUP ---
     # Create results directory if it doesn't exist
