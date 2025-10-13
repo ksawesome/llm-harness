@@ -14,6 +14,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from models_config import models_to_test
+from prompt_utils import (
+    load_test_prompts,
+    load_system_prompts,
+    expand_prompts_with_templates,
+    add_helm_style_prompts,
+)
 
 
 class RateLimiter:
@@ -101,9 +107,38 @@ async def run_benchmark(args):
         logger.error("API key validation failed. Exiting.")
         return
 
-    # Load the datasets
-    test_prompts = load_data("data/test_prompts.json")
-    system_prompts = load_data("data/system_prompts.json")
+    # Load the datasets with validation
+    test_prompts = load_test_prompts("data/test_prompts.json")
+    system_prompts = load_system_prompts("data/system_prompts.json")
+
+    # Optionally expand with HELM-style prompts
+    if args.include_helm:
+        test_prompts = add_helm_style_prompts(test_prompts)
+        logger.info(
+            f"Added HELM-style prompts. Total prompts: {len(test_prompts)}"
+        )
+
+    # Apply Jinja2 templating if template variables are provided
+    template_vars = {}
+    if args.template_vars:
+        try:
+            # Parse template variables as JSON
+            import json
+
+            template_vars = json.loads(args.template_vars)
+        except json.JSONDecodeError:
+            logger.error(
+                f"Invalid JSON for template variables: {args.template_vars}"
+            )
+            return
+
+    if template_vars:
+        test_prompts = expand_prompts_with_templates(
+            test_prompts, template_vars
+        )
+        logger.info(
+            f"Applied template variables: {list(template_vars.keys())}"
+        )
 
     # Handle prompt range
     if args.prompt_range:
@@ -330,6 +365,16 @@ if __name__ == "__main__":
         "--prompt-range",
         type=str,
         help="Specify a range of prompts to run, e.g., '1-5' or '3'.",
+    )
+    parser.add_argument(
+        "--include-helm",
+        action="store_true",
+        help="Include HELM-style prompts in the benchmark.",
+    )
+    parser.add_argument(
+        "--template-vars",
+        type=str,
+        help="JSON string of template variables for prompt expansion.",
     )
 
     # Setup environment once

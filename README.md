@@ -22,6 +22,9 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Dynamic Model Loading**: Load model configurations from JSON file for easy customization
 - **Model Categories**: Group models by categories (e.g., "fast", "accurate") for selective benchmarking
 - **Configuration Validation**: Automatic validation of adapter functions and model configurations
+- **Prompt Schema Validation**: JSON schema validation for prompt files to catch malformed data
+- **Jinja2 Templating**: Support for dynamic prompt generation with template variables
+- **HELM Integration**: Option to include HELM-style prompts for broader evaluation coverage
 
 The models under evaluation are:
 
@@ -106,6 +109,45 @@ Example configuration:
 ```
 
 The system automatically validates all configurations on startup, ensuring adapters are importable and models are properly configured.
+
+## 📝 Prompt System
+
+The harness uses a robust prompt system with validation and templating capabilities.
+
+### Prompt Files
+
+- `data/test_prompts.json`: Test prompts with categories, expected keywords, and teacher context
+- `data/system_prompts.json`: System prompt templates for different tutoring styles
+
+### Features
+
+- **Schema Validation**: Automatic validation of prompt file structure using JSON Schema
+- **Jinja2 Templating**: Dynamic prompt generation with variables
+- **HELM Integration**: Optional inclusion of HELM-style prompts for comprehensive evaluation
+- **Category Filtering**: Prompts organized by categories for targeted testing
+
+### Template Variables
+
+Use `--template-vars` to provide variables for prompt templating:
+
+```bash
+python main.py --template-vars '{"vehicle_type": "car", "mass": "1200", "initial_speed": "0", "final_speed": "10", "time": "5"}'
+```
+
+Example template prompt:
+```json
+{
+  "prompt_text": "Student: \"I need to calculate the power for a {{vehicle_type}} that weighs {{mass}}kg...\""
+}
+```
+
+### HELM Prompts
+
+Include HELM-style prompts for broader evaluation:
+
+```bash
+python main.py --include-helm
+```
 
 -----
 
