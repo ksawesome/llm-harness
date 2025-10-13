@@ -28,6 +28,9 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Automated Report Generation**: Create professional PDF/HTML reports with visualizations and insights
 - **LLM-as-Judge Evaluation**: AI-powered response quality assessment using advanced language models
 - **Comparative Analysis**: Statistical model comparisons with automated insights and recommendations
+- **Data Management**: Automated cleanup and archiving of old results with compression
+- **Database Storage**: SQLite-based persistent storage for efficient querying and analysis
+- **Interactive Dashboard**: Modern web dashboard with real-time charts and model comparisons
 
 The models under evaluation are:
 
@@ -80,7 +83,10 @@ llm-harness/
 |-- .gitignore            # Git ignore rules
 |-- .pre-commit-config.yaml # Code quality hooks
 |-- check_models.py       # Model availability checker
+|-- dashboard.py          # Interactive web dashboard with charts
+|-- database.py           # SQLite database manager for results
 |-- main.py               # Main benchmarking script
+|-- manage_results.py     # Data cleanup and archiving utility
 |-- models.json           # Model configurations (JSON format)
 |-- pyproject.toml        # Project configuration
 |-- requirements.txt      # Dependencies
@@ -401,6 +407,45 @@ python analysis/comparative_analysis.py results/raw_output/benchmark_results.csv
 - Radar charts for multi-dimensional comparison
 - Cost-benefit analysis
 
+#### Data Management and Storage
+Manage benchmark results with automated cleanup and persistent storage:
+
+**Results Cleanup and Archiving:**
+```bash
+# Archive results older than 30 days
+python manage_results.py archive --days 30
+
+# Compress archived files
+python manage_results.py compress
+
+# Clean up temporary files
+python manage_results.py cleanup
+```
+
+**Database Storage:**
+The system now uses SQLite for persistent storage of benchmark results, enabling:
+- Efficient querying of historical data
+- Fast aggregation and analysis
+- Data integrity and consistency
+- Concurrent access support
+
+**Interactive Web Dashboard:**
+Launch the modern visualization dashboard for real-time analysis:
+
+```bash
+# Start the dashboard server
+python dashboard.py
+
+# Access at http://localhost:5000
+```
+
+**Dashboard Features:**
+- Real-time model performance metrics
+- Interactive charts (latency, cost, success rates)
+- Run comparison and historical analysis
+- Responsive design for desktop and mobile
+- API endpoints for programmatic access
+
 #### Legacy Analysis Tools
 - **`analysis/statistical_test.py`**: Statistical analysis including Cohen's Kappa and Wilcoxon tests
 - **`analysis/generate_visualizations.ipynb`**: Jupyter notebook for radar charts, scatterplots, and CDF plots
@@ -471,6 +516,14 @@ GitHub Actions automatically:
 - ✅ **Dependency Handling**: Graceful handling of missing libraries (e.g., skip Anthropic if not installed)
 - ✅ **Key Validation**: API key testing on startup to prevent runtime failures
 - ✅ **Code Quality**: Improved linting and formatting consistency
+
+### v0.1.2 Data Management & Visualization
+- ✅ **Results Management**: Automated cleanup and archiving of old CSV results with compression
+- ✅ **Database Storage**: SQLite-based persistent storage for efficient querying and analysis
+- ✅ **Interactive Dashboard**: Modern Flask-based web dashboard with real-time charts and comparisons
+- ✅ **Data Integrity**: Robust error handling and data validation for database operations
+- ✅ **API Endpoints**: RESTful APIs for programmatic access to benchmark data
+- ✅ **Visualization**: Plotly-powered interactive charts for latency, cost, and success rate analysis
 
 ### Performance Optimizations
 - Rate limiting prevents API throttling
