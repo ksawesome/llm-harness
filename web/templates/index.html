@@ -61,10 +61,10 @@
                         <p class="lead text-muted">Explore your benchmark results</p>
                     </div>
 
-                    {% if files %}
-                    <h3 class="mb-4"><i class="fas fa-file-csv text-success me-2"></i>Available Results ({{ files|length }})</h3>
-                    <div class="list-group">
-                        {% for file in files %}
+                    {% if raw_files %}
+                    <h3 class="mb-4"><i class="fas fa-file-csv text-success me-2"></i>Recorded Runs ({{ raw_files|length }})</h3>
+                    <div class="list-group mb-5">
+                        {% for file in raw_files %}
                         <div class="list-group-item file-item d-flex align-items-center">
                             <span class="file-number">{{ loop.index }}</span>
                             <a href="/results/{{ file }}" class="file-link flex-grow-1">
@@ -76,11 +76,28 @@
                         </div>
                         {% endfor %}
                     </div>
-                    {% else %}
+                    {% endif %}
+
+                    {% if synthetic_providers %}
+                    <h3 class="mb-4"><i class="fas fa-robot text-warning me-2"></i>Synthetic Providers ({{ synthetic_providers|length }})</h3>
+                    <div class="list-group">
+                        {% for provider in synthetic_providers %}
+                        <div class="list-group-item file-item d-flex align-items-center">
+                            <span class="file-number">{{ loop.index }}</span>
+                            <a href="/synthetic/{{ provider }}" class="file-link flex-grow-1">
+                                <i class="fas fa-microchip me-2"></i>{{ provider|capitalize }}
+                            </a>
+                            <span class="badge bg-warning text-dark">Synthetic</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    {% if not raw_files and not synthetic_providers %}
                     <div class="text-center py-5">
                         <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
                         <h4 class="text-muted">No Results Found</h4>
-                        <p class="text-muted">Run some benchmarks to see results here.</p>
+                        <p class="text-muted">Run some benchmarks or generate synthetic runs to see results here.</p>
                     </div>
                     {% endif %}
                 </div>

@@ -23,6 +23,7 @@ class ResultManager:
         self.results_dir = Path(results_dir)
         self.archive_dir = Path(archive_dir)
         self.raw_output_dir = self.results_dir / "raw_output"
+        self.synthetic_dir = self.results_dir / "synthetic"
 
         # Create directories if they don't exist
         self.archive_dir.mkdir(parents=True, exist_ok=True)
@@ -41,6 +42,20 @@ class ResultManager:
 
         return list(self.raw_output_dir.glob("*.csv"))
 
+    def get_synthetic_csv_files(self) -> List[Path]:
+        """Get synthetic response CSV files."""
+        if not self.synthetic_dir.exists():
+            return []
+
+        csv_files: List[Path] = []
+        for provider_dir in self.synthetic_dir.iterdir():
+            if not provider_dir.is_dir():
+                continue
+            responses = provider_dir / "responses.csv"
+            if responses.exists():
+                csv_files.append(responses)
+        return csv_files
+
     def get_file_info(self, file_path: Path) -> Dict:
         """Get information about a file."""
         stat = file_path.stat()
@@ -58,7 +73,7 @@ class ResultManager:
     ) -> List[Path]:
         """Compress CSV files larger than threshold."""
         compressed_files = []
-        csv_files = self.get_csv_files()
+        csv_files = self.get_csv_files() + self.get_synthetic_csv_files()
 
         for csv_file in csv_files:
             info = self.get_file_info(csv_file)
@@ -83,7 +98,7 @@ class ResultManager:
     def archive_old_files(self, days_threshold: int = 30) -> List[Path]:
         """Archive files older than threshold."""
         archived_files = []
-        csv_files = self.get_csv_files()
+        csv_files = self.get_csv_files() + self.get_synthetic_csv_files()
 
         for csv_file in csv_files:
             info = self.get_file_info(csv_file)
@@ -103,7 +118,11 @@ class ResultManager:
         """Remove empty directories."""
         cleaned_dirs = []
 
-        for dir_path in [self.results_dir, self.archive_dir]:
+        for dir_path in [
+            self.results_dir,
+            self.archive_dir,
+            self.synthetic_dir,
+        ]:
             if dir_path.exists():
                 try:
                     dir_path.rmdir()  # Only removes if empty
@@ -123,6 +142,9 @@ class ResultManager:
             "old_files": 0,
             "large_files": 0,
             "compressed_files": 0,
+            "synthetic_providers": 0,
+            "synthetic_records": 0,
+            "synthetic_size_mb": 0.0,
         }
 
         csv_files = self.get_csv_files()
@@ -138,6 +160,28 @@ class ResultManager:
                 stats["large_files"] += 1
             if csv_file.suffix == ".gz":
                 stats["compressed_files"] += 1
+
+        if self.synthetic_dir.exists():
+            provider_dirs = [
+                provider
+                for provider in self.synthetic_dir.iterdir()
+                if provider.is_dir()
+            ]
+            stats["synthetic_providers"] = len(provider_dirs)
+
+            synthetic_files: List[Path] = []
+            for provider in provider_dirs:
+                synthetic_files.extend(provider.glob("*.json"))
+                responses_csv = provider / "responses.csv"
+                if responses_csv.exists():
+                    synthetic_files.append(responses_csv)
+
+            stats["synthetic_records"] = sum(
+                1 for file in synthetic_files if file.suffix == ".json"
+            )
+            stats["synthetic_size_mb"] = sum(
+                file.stat().st_size for file in synthetic_files
+            ) / (1024 * 1024)
 
         return stats
 
@@ -179,6 +223,8 @@ class ResultManager:
             "compressed_files": len(compressed),
             "archived_files": len(archived),
             "cleaned_directories": len(cleaned),
+            "synthetic_providers": final_stats.get("synthetic_providers", 0),
+            "synthetic_records": final_stats.get("synthetic_records", 0),
         }
 
 

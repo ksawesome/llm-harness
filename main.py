@@ -4,6 +4,7 @@ import time
 import argparse
 import asyncio
 import logging
+import csv
 from tqdm.asyncio import tqdm
 import pandas as pd
 from datetime import datetime
@@ -79,33 +80,37 @@ async def run_benchmark(args):
     )
     logger = logging.getLogger(__name__)
 
-    def validate_api_keys():
-        """Validate that required API keys are present and test basic connectivity."""
-        required_keys = {
-            "OPENAI_API_KEY": "OpenAI",
-            "ANTHROPIC_API_KEY": "Anthropic",
-            "GOOGLE_API_KEY": "Google",
-            "COHERE_API_KEY": "Cohere",
-            "HUGGINGFACE_API_KEY": "Hugging Face",
+    def filter_configs_for_api_keys(configs):
+        """Remove configs requiring API keys that are not present."""
+
+        adapter_requirements = {
+            "call_google_api": ("GOOGLE_API_KEY", "Google"),
+            "call_cohere_api": ("COHERE_API_KEY", "Cohere"),
+            "call_huggingface_api": ("HUGGINGFACE_API_KEY", "Hugging Face"),
         }
 
-        missing_keys = []
-        for key, provider in required_keys.items():
-            if not os.getenv(key):
-                missing_keys.append(f"{provider} ({key})")
+        filtered = {}
+        skipped = []
 
-        if missing_keys:
-            logger.error(f"Missing API keys: {', '.join(missing_keys)}")
-            return False
+        for model_key, config in configs.items():
+            adapter_name = getattr(config.adapter, "__name__", "")
+            requirement = adapter_requirements.get(adapter_name)
+            if requirement:
+                env_key, provider = requirement
+                if not os.getenv(env_key):
+                    skipped.append((model_key, provider, env_key))
+                    continue
+            filtered[model_key] = config
 
-        # Test basic connectivity (optional, can be disabled for faster startup)
-        logger.info("API keys validated successfully.")
-        return True
+        for model_key, provider, env_key in skipped:
+            logger.warning(
+                "Skipping %s because %s API key (%s) is not set.",
+                model_key,
+                provider,
+                env_key,
+            )
 
-    # Validate API keys
-    if not validate_api_keys():
-        logger.error("API key validation failed. Exiting.")
-        return
+        return filtered
 
     # Load the datasets with validation
     test_prompts = load_test_prompts("data/test_prompts.json")
@@ -165,7 +170,6 @@ async def run_benchmark(args):
             return
         # Create a new dictionary with only the selected model
         selected_configs = {args.model: models_to_test[args.model]}
-        models_to_run = {args.model: models_to_test[args.model].adapter}
     elif args.category:
         # Filter models by category
         selected_configs = {
@@ -173,19 +177,29 @@ async def run_benchmark(args):
             for k, v in models_to_test.items()
             if v.category == args.category
         }
-        models_to_run = {k: v.adapter for k, v in selected_configs.items()}
-        if not models_to_run:
+        if not selected_configs:
             logger.error(
                 f"No models found for category '{args.category}'. "
                 f"Available categories: {list(set(v.category for v in models_to_test.values()))}"
             )
             return
-        logger.info(
-            f"Running models in category '{args.category}': {list(models_to_run.keys())}"
-        )
     else:
         selected_configs = models_to_test
-        models_to_run = {k: v.adapter for k, v in models_to_test.items()}
+
+    selected_configs = filter_configs_for_api_keys(selected_configs)
+
+    if not selected_configs:
+        logger.error(
+            "No models available to run. Set the required API keys or choose synthetic providers."
+        )
+        return
+
+    models_to_run = {k: v.adapter for k, v in selected_configs.items()}
+
+    logger.info(
+        "Running models: %s",
+        list(models_to_run.keys()),
+    )
 
     # Select the system prompt to use for this run
     try:
@@ -234,7 +248,9 @@ async def run_benchmark(args):
             "response_length",
         ]
     )
-    results_df.to_csv(temp_filename, index=False)  # Write header
+    results_df.to_csv(
+        temp_filename, index=False, quoting=csv.QUOTE_ALL
+    )  # Write header
     logger.info(f"Logging results to {output_filename}")
 
     # --- 4. MAIN BENCHMARKING LOOP ---
@@ -311,7 +327,11 @@ async def run_benchmark(args):
                 }
 
                 pd.DataFrame([log_entry]).to_csv(
-                    temp_filename, mode="a", header=False, index=False
+                    temp_filename,
+                    mode="a",
+                    header=False,
+                    index=False,
+                    quoting=csv.QUOTE_ALL,
                 )
 
                 if response_dict.get("error_message"):

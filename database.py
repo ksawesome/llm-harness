@@ -4,12 +4,15 @@ Provides SQLite-based storage and querying for benchmark results.
 """
 
 import sqlite3
+import csv
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Optional
 from datetime import datetime
 import json
 import logging
+
+from utils.result_loader import load_results
 
 
 class BenchmarkDatabase:
@@ -59,6 +62,22 @@ class BenchmarkDatabase:
             """
             )
 
+            # Ensure additional columns exist (for schema evolution)
+            self._ensure_column(conn, "benchmark_results", "date_time", "TEXT")
+            self._ensure_column(
+                conn,
+                "benchmark_results",
+                "response_length",
+                "INTEGER DEFAULT 0",
+            )
+            self._ensure_column(
+                conn, "benchmark_results", "synthetic", "INTEGER DEFAULT 0"
+            )
+            self._ensure_column(conn, "benchmark_results", "provider", "TEXT")
+            self._ensure_column(
+                conn, "benchmark_results", "synthetic_source", "TEXT"
+            )
+
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS analysis_results (
@@ -83,6 +102,21 @@ class BenchmarkDatabase:
                 "CREATE INDEX IF NOT EXISTS idx_analysis_run_id ON analysis_results(run_id)"
             )
 
+    def _ensure_column(
+        self,
+        conn: sqlite3.Connection,
+        table: str,
+        column: str,
+        definition: str,
+    ) -> None:
+        existing = {
+            row[1] for row in conn.execute(f"PRAGMA table_info({table})")
+        }
+        if column not in existing:
+            conn.execute(
+                f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+            )
+
     def store_benchmark_run(self, run_id: str, config: Dict) -> bool:
         """Store a benchmark run configuration."""
         try:
@@ -102,55 +136,121 @@ class BenchmarkDatabase:
             self.logger.error(f"Failed to store benchmark run: {e}")
             return False
 
-    def store_results_from_csv(self, csv_path: str, run_id: str) -> bool:
-        """Import benchmark results from CSV file."""
+    def store_results_from_source(
+        self,
+        source_path: str,
+        run_id: Optional[str] = None,
+        include_synthetic: bool = True,
+    ) -> bool:
+        """Import benchmark results from a CSV file or directory."""
+
         try:
-            df = pd.read_csv(csv_path)
+            df = load_results(source_path, include_synthetic=include_synthetic)
+        except Exception as exc:  # pylint: disable=broad-except
+            self.logger.error(
+                "Failed to load results from %s: %s", source_path, exc
+            )
+            return False
 
-            # Ensure required columns exist
-            required_cols = ["prompt_id", "model", "latency_ms", "cost_usd"]
-            missing_cols = [
-                col for col in required_cols if col not in df.columns
-            ]
-            if missing_cols:
-                self.logger.error(f"Missing required columns: {missing_cols}")
-                return False
+        if df.empty:
+            self.logger.warning(
+                "No benchmark records found in %s", source_path
+            )
+            return False
 
+        default_run_id = run_id or Path(source_path).stem
+        df["run_id"] = df["run_id"].fillna(default_run_id)
+
+        if df["run_id"].isna().any():
+            self.logger.error(
+                "Run ID resolution failed for one or more rows from %s",
+                source_path,
+            )
+            return False
+
+        run_configs: Dict[str, Dict] = {}
+        for rid, group in df.groupby("run_id"):
+            config: Dict[str, object] = {
+                "source": str(source_path),
+                "row_count": int(len(group)),
+            }
+            if bool(group["synthetic"].all()):
+                config["synthetic"] = True
+                providers = sorted(
+                    {
+                        provider
+                        for provider in group["provider"].dropna().unique()
+                        if provider
+                    }
+                )
+                if providers:
+                    config["providers"] = providers
+            run_configs[str(rid)] = config
+
+        for rid, config in run_configs.items():
+            self.store_benchmark_run(rid, config)
+
+        def _optional(value: object) -> Optional[str]:
+            if value in (None, ""):
+                return None
+            if isinstance(value, float) and pd.isna(value):
+                return None
+            return str(value)
+
+        df["latency_ms"] = df["latency_ms"].astype(float)
+        df["tokens_in"] = df["tokens_in"].astype(int)
+        df["tokens_out"] = df["tokens_out"].astype(int)
+        df["cost_usd"] = df["cost_usd"].astype(float)
+        df["response_length"] = df["response_length"].astype(int)
+
+        records = [
+            (
+                str(row.run_id),
+                str(row.prompt_id),
+                str(row.model),
+                str(row.model_version),
+                row.latency_ms,
+                row.tokens_in,
+                row.tokens_out,
+                row.cost_usd,
+                row.response_text or "",
+                row.error_message or "",
+                _optional(row.date_time),
+                row.response_length,
+                1 if bool(row.synthetic) else 0,
+                _optional(row.provider),
+                _optional(row.synthetic_source),
+            )
+            for row in df.itertuples(index=False)
+        ]
+
+        try:
             with sqlite3.connect(self.db_path) as conn:
-                # Store results in batches for better performance
-                results = []
-                for _, row in df.iterrows():
-                    result = (
-                        run_id,
-                        str(row.get("prompt_id", "")),
-                        str(row.get("model", "")),
-                        str(row.get("model_version", "")),
-                        float(row.get("latency_ms", 0)),
-                        int(row.get("tokens_in", 0)),
-                        int(row.get("tokens_out", 0)),
-                        float(row.get("cost_usd", 0)),
-                        str(row.get("response_text", "")),
-                        str(row.get("error_message", "")),
-                    )
-                    results.append(result)
-
                 conn.executemany(
                     """
                     INSERT INTO benchmark_results
-                    (run_id, prompt_id, model, model_version, latency_ms, tokens_in, tokens_out, cost_usd, response_text, error_message)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (run_id, prompt_id, model, model_version, latency_ms, tokens_in, tokens_out, cost_usd, response_text, error_message, date_time, response_length, synthetic, provider, synthetic_source)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                    results,
+                    records,
                 )
 
-                self.logger.info(
-                    f"Stored {len(results)} results from {csv_path}"
-                )
-                return True
-
-        except Exception as e:
-            self.logger.error(f"Failed to store results from CSV: {e}")
+            self.logger.info(
+                "Stored %d records from %s", len(records), source_path
+            )
+            return True
+        except Exception as exc:  # pylint: disable=broad-except
+            self.logger.error(
+                "Failed to persist results from %s: %s", source_path, exc
+            )
             return False
+
+    def store_results_from_csv(self, csv_path: str, run_id: str) -> bool:
+        """Backward-compatible wrapper for storing results from a CSV file."""
+
+        return self.store_results_from_source(
+            csv_path, run_id=run_id, include_synthetic=True
+        )
 
     def store_analysis_result(
         self, run_id: str, analysis_type: str, analysis_data: Dict
@@ -190,6 +290,7 @@ class BenchmarkDatabase:
         run_id: Optional[str] = None,
         model: Optional[str] = None,
         limit: int = 1000,
+        synthetic: Optional[bool] = None,
     ) -> pd.DataFrame:
         """Query benchmark results."""
         query = "SELECT * FROM benchmark_results WHERE 1=1"
@@ -203,17 +304,24 @@ class BenchmarkDatabase:
             query += " AND model = ?"
             params.append(model)
 
+        if synthetic is not None:
+            query += " AND synthetic = ?"
+            params.append(1 if synthetic else 0)
+
         query += f" ORDER BY id DESC LIMIT {limit}"
 
         with sqlite3.connect(self.db_path) as conn:
             return pd.read_sql_query(query, conn, params=params)
 
-    def get_model_stats(self, run_id: Optional[str] = None) -> pd.DataFrame:
+    def get_model_stats(
+        self, run_id: Optional[str] = None, synthetic: Optional[bool] = None
+    ) -> pd.DataFrame:
         """Get aggregated statistics by model."""
         query = """
             SELECT
                 model,
                 COUNT(*) as total_requests,
+                SUM(CASE WHEN synthetic = 1 THEN 1 ELSE 0 END) as synthetic_requests,
                 AVG(latency_ms) as avg_latency,
                 MIN(latency_ms) as min_latency,
                 MAX(latency_ms) as max_latency,
@@ -229,6 +337,10 @@ class BenchmarkDatabase:
             query += " AND run_id = ?"
             params.append(run_id)
 
+        if synthetic is not None:
+            query += " AND synthetic = ?"
+            params.append(1 if synthetic else 0)
+
         query += " GROUP BY model ORDER BY avg_latency"
 
         with sqlite3.connect(self.db_path) as conn:
@@ -243,6 +355,7 @@ class BenchmarkDatabase:
                 run_id,
                 model,
                 COUNT(*) as requests,
+                SUM(CASE WHEN synthetic = 1 THEN 1 ELSE 0 END) as synthetic_requests,
                 AVG(latency_ms) as avg_latency,
                 SUM(cost_usd) as total_cost,
                 SUM(CASE WHEN error_message IS NULL OR error_message = '' THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as success_rate
@@ -261,7 +374,7 @@ class BenchmarkDatabase:
             df = self.get_results(
                 run_id=run_id, limit=10000
             )  # Reasonable limit
-            df.to_csv(output_path, index=False)
+            df.to_csv(output_path, index=False, quoting=csv.QUOTE_ALL)
             self.logger.info(f"Exported {len(df)} results to {output_path}")
             return True
         except Exception as e:
@@ -347,6 +460,11 @@ def main():
     parser.add_argument(
         "--cleanup-days", type=int, default=90, help="Days to keep for cleanup"
     )
+    parser.add_argument(
+        "--include-synthetic",
+        action="store_true",
+        help="Include synthetic results when importing",
+    )
 
     args = parser.parse_args()
 
@@ -357,7 +475,11 @@ def main():
             print("Error: --csv-file and --run-id required for import")
             return
 
-        success = db.store_results_from_csv(args.csv_file, args.run_id)
+        success = db.store_results_from_source(
+            args.csv_file,
+            run_id=args.run_id,
+            include_synthetic=args.include_synthetic,
+        )
         print(f"Import {'successful' if success else 'failed'}")
 
     elif args.action == "export":

@@ -16,6 +16,8 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background-color: #f8f9fa; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-weight: 600; font-size: 0.85rem; }
+        .badge-synthetic { background: #ffc107; color: #212529; }
         .run-link { color: #007bff; text-decoration: none; }
         .run-link:hover { text-decoration: underline; }
     </style>
@@ -25,6 +27,37 @@
         <h1>LLM Benchmark Dashboard</h1>
         <p>Monitor and analyze your language model benchmarks</p>
     </div>
+
+    {% if runs %}
+    <div class="chart-container">
+        <h2>Recent Runs</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Run ID</th>
+                    <th>Timestamp</th>
+                    <th>Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                <tr>
+                    <td><a class="run-link" href="/run/{{ run.run_id }}">{{ run.run_id }}</a></td>
+                    <td>{{ run.timestamp }}</td>
+                    <td>
+                        {% if run.is_synthetic %}
+                        <span class="badge badge-synthetic">Synthetic</span>
+                        {% endif %}
+                        {% if run.providers %}
+                        Providers: {{ run.providers|join(', ') }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
 
     <div class="stats-grid" id="stats-container">
         <!-- Stats will be loaded here -->
@@ -61,6 +94,7 @@
                             <p>Avg Latency</p>
                             <p>Success: ${stat.success_rate.toFixed(1)}%</p>
                             <p>Cost: $${stat.total_cost.toFixed(4)}</p>
+                            ${stat.synthetic_requests > 0 ? `<p><strong>${stat.synthetic_requests}</strong> synthetic responses</p>` : ''}
                         </div>
                     `).join('');
                 }

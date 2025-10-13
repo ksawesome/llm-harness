@@ -3,15 +3,22 @@ Visualization Dashboard for Benchmark Results
 Local web application for viewing and analyzing benchmark results.
 """
 
+import json
+import logging
 import os
 import sys
+from pathlib import Path
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+import plotly.express as px
+from flask import Flask, jsonify, render_template
 
-import plotly.express as px  # noqa: E402
-from flask import Flask, render_template, jsonify  # noqa: E402
-from database import BenchmarkDatabase  # noqa: E402
-import logging  # noqa: E402
+try:
+    from database import BenchmarkDatabase
+except ImportError:  # pragma: no cover - fallback for script execution
+    ROOT_DIR = Path(__file__).resolve().parent.parent
+    if str(ROOT_DIR) not in sys.path:
+        sys.path.insert(0, str(ROOT_DIR))
+    from database import BenchmarkDatabase
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -30,6 +37,15 @@ def dashboard():
     try:
         # Get recent runs
         runs = db.get_runs(limit=10)
+
+        for run in runs:
+            try:
+                config = json.loads(run.get("config") or "{}")
+            except json.JSONDecodeError:
+                config = {}
+            run["config"] = config
+            run["is_synthetic"] = bool(config.get("synthetic"))
+            run["providers"] = config.get("providers", [])
 
         # Get latest run stats
         if runs:

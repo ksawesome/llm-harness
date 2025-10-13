@@ -1,49 +1,41 @@
-from unittest.mock import patch, MagicMock
+from pathlib import Path
+
+import pytest
+
 from adapters.openai_adapter import call_openai_api
 
 
-def test_call_openai_api_success():
-    """Test successful OpenAI API call."""
-    mock_response = MagicMock()
-    mock_response.choices = [MagicMock()]
-    mock_response.choices[0].message.content = "Test response"
-    mock_response.model = "gpt-4o-mini"
-    mock_response.usage.prompt_tokens = 10
-    mock_response.usage.completion_tokens = 20
+def test_call_openai_api_synthetic(tmp_path, monkeypatch):
+    """Synthetic adapter should create deterministic mock responses."""
 
-    with patch("adapters.openai_adapter.client") as mock_client:
-        mock_client.chat.completions.create.return_value = mock_response
+    monkeypatch.setenv("LLM_HARNESS_SYNTHETIC_DIR", str(tmp_path))
 
-        result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
+    result = call_openai_api(
+        "gpt-4o-mini",
+        "Explain why the sky appears blue during the day.",
+        "Provide student-friendly reasoning.",
+    )
 
-        assert result["model_version"] == "gpt-4o-mini"
-        assert result["response_text"] == "Test response"
-        assert result["tokens_in"] == 10
-        assert result["tokens_out"] == 20
-        assert result["error_message"] is None
-        assert "latency_ms" in result
-        assert "cost_usd" in result
+    assert result["model_version"] == "gpt-4o-mini-synthetic"
+    assert "OpenAI synthetic sample" in result["response_text"]
+    assert result["tokens_out"] > 0
+    assert result["error_message"] is None
+    assert result["synthetic"] is True
 
-
-def test_call_openai_api_client_none():
-    """Test when OpenAI client is not initialized."""
-    with patch("adapters.openai_adapter.client", None):
-        result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
-
-        assert result["model_version"] == "N/A"
-        assert result["response_text"] == ""
-        assert result["error_message"] == "OpenAI client failed to initialize."
+    synthetic_source = result["synthetic_source"]
+    assert synthetic_source is not None
+    assert Path(synthetic_source).is_file()
 
 
-def test_call_openai_api_exception():
-    """Test handling of API exceptions."""
-    with patch("adapters.openai_adapter.client") as mock_client:
-        mock_client.chat.completions.create.side_effect = Exception(
-            "API Error"
-        )
+@pytest.mark.parametrize(
+    "prompt_text",
+    ["", "   "],
+)
+def test_call_openai_api_empty_prompt_returns_error(prompt_text):
+    """Blank prompts should return an error payload and avoid file writes."""
 
-        result = call_openai_api("gpt-4o-mini", "Test prompt", "Test system")
+    result = call_openai_api("gpt-4o-mini", prompt_text, "")
 
-        assert result["model_version"] == "gpt-4o-mini"
-        assert result["response_text"] == ""
-        assert result["error_message"] == "API Error"
+    assert result["error_code"] == "invalid-prompt"
+    assert result["response_text"] == ""
+    assert result["synthetic_source"] is None
