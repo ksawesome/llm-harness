@@ -80,6 +80,9 @@ llm-harness/
 |   |-- test_main.py          # Core functionality tests
 |   |-- test_models_config.py # Configuration tests
 |   |-- test_openai_adapter.py # API adapter tests
+|-- utils/                # Shared utility functions
+|   |-- __init__.py
+|   |-- check_models.py       # Model availability checker
 |-- .github/              # GitHub Actions CI/CD
 |   |-- workflows/
 |       |-- ci.yml            # Automated testing pipeline
@@ -87,7 +90,6 @@ llm-harness/
 |-- .env.example          # Environment template
 |-- .gitignore            # Git ignore rules
 |-- .pre-commit-config.yaml # Code quality hooks
-|-- check_models.py       # Model availability checker
 |-- database.py           # SQLite database manager for results
 |-- main.py               # Main benchmarking script
 |-- manage_results.py     # Data cleanup and archiving utility
