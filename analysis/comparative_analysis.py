@@ -98,9 +98,9 @@ class ComparativeAnalyzer:
         results = {}
 
         if len(successful_df["model"].unique()) < 2:
-            results[
-                "error"
-            ] = "Need at least 2 models for statistical comparison"
+            results["error"] = (
+                "Need at least 2 models for statistical comparison"
+            )
             return results
 
         # Latency comparison
@@ -130,9 +130,9 @@ class ComparativeAnalyzer:
         model_data = {k: v for k, v in model_data.items() if len(v) >= 3}
 
         if len(model_data) < 2:
-            results[
-                "error"
-            ] = f"Need at least 2 models with sufficient data for {metric_name} comparison"
+            results["error"] = (
+                f"Need at least 2 models with sufficient data for {metric_name} comparison"
+            )
             return results
 
         # Calculate basic statistics
