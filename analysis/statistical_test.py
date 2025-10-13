@@ -33,6 +33,18 @@ def analyze_inter_rater_reliability(df_human_raw):
     """
     print("\n--- 1. Inter-Rater Reliability Analysis (Cohen's Kappa) ---")
 
+    required_columns = ["response_id", "rater_id", "pedagogical_quality"]
+    missing_columns = [
+        col for col in required_columns if col not in df_human_raw.columns
+    ]
+
+    if missing_columns:
+        print(
+            f"Error: Missing required columns for inter-rater reliability: {missing_columns}"
+        )
+        print(f"Available columns: {list(df_human_raw.columns)}")
+        return
+
     # Pivot the table to get raters' scores side-by-side for each response
     pivot_df = df_human_raw.pivot(
         index="response_id", columns="rater_id", values="pedagogical_quality"
@@ -67,7 +79,23 @@ def analyze_model_performance(df_merged):
         "\n--- 2. Comparative Model Performance Analysis (Wilcoxon Signed-Rank Test) ---"
     )
 
+    required_columns = ["model", "pedagogical_quality"]
+    missing_columns = [
+        col for col in required_columns if col not in df_merged.columns
+    ]
+
+    if missing_columns:
+        print(
+            f"Error: Missing required columns for model performance analysis: {missing_columns}"
+        )
+        print(f"Available columns: {list(df_merged.columns)}")
+        return
+
     models = df_merged["model"].unique()
+    if len(models) < 2:
+        print("Error: Need at least 2 models to perform comparative analysis.")
+        return
+
     model_pairs = list(combinations(models, 2))
 
     results = []
@@ -81,14 +109,24 @@ def analyze_model_performance(df_merged):
             "pedagogical_quality"
         ]
 
+        if len(scores1) == 0 or len(scores2) == 0:
+            print(f"Warning: No data for model pair {model1} vs {model2}")
+            continue
+
         # The prompts are the same for both models, making the samples related
-        stat, p_value = wilcoxon(scores1, scores2)
-        results.append(
-            {"model1": model1, "model2": model2, "p_value": p_value}
-        )
+        try:
+            stat, p_value = wilcoxon(scores1, scores2)
+            results.append(
+                {"model1": model1, "model2": model2, "p_value": p_value}
+            )
+        except ValueError as e:
+            print(
+                f"Warning: Could not perform Wilcoxon test for {model1} vs {model2}: {e}"
+            )
+            continue
 
     if not results:
-        print("No model pairs to compare.")
+        print("No valid model pairs to compare.")
         return
 
     p_values = [res["p_value"] for res in results]

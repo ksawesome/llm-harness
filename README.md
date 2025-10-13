@@ -25,6 +25,9 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Prompt Schema Validation**: JSON schema validation for prompt files to catch malformed data
 - **Jinja2 Templating**: Support for dynamic prompt generation with template variables
 - **HELM Integration**: Option to include HELM-style prompts for broader evaluation coverage
+- **Automated Report Generation**: Create professional PDF/HTML reports with visualizations and insights
+- **LLM-as-Judge Evaluation**: AI-powered response quality assessment using advanced language models
+- **Comparative Analysis**: Statistical model comparisons with automated insights and recommendations
 
 The models under evaluation are:
 
@@ -50,8 +53,11 @@ llm-harness/
 |   |-- huggingface_adapter.py # Hugging Face models integration
 |   |-- __init__.py
 |-- analysis/             # Data analysis and visualization scripts
-|   |-- generate_visualizations.ipynb
-|   |-- statistical_test.py
+|   |-- generate_visualizations.ipynb  # Jupyter notebook for charts and plots
+|   |-- statistical_test.py            # Statistical analysis and significance tests
+|   |-- generate_report.py             # Automated PDF/HTML report generation
+|   |-- llm_judge_evaluation.py        # AI-powered response quality evaluation
+|   |-- comparative_analysis.py        # Statistical model comparison and insights
 |-- data/                 # Benchmark input data
 |   |-- test_prompts.json     # Test prompts for evaluation
 |   |-- system_prompts.json   # System prompt configurations
@@ -329,10 +335,75 @@ The modern web interface provides:
 
 ### Data Analysis
 
-After collecting benchmark data, use the analysis tools:
+After collecting benchmark data, use the comprehensive analysis toolkit:
 
-  * **`analysis/statistical_test.py`**: Statistical analysis including Cohen's Kappa and Wilcoxon tests
-  * **`analysis/generate_visualizations.ipynb`**: Jupyter notebook for radar charts, scatterplots, and CDF plots
+#### Automated Report Generation
+Generate professional PDF and HTML reports with visualizations and insights:
+
+```bash
+# Generate both PDF and HTML reports
+python analysis/generate_report.py results/raw_output/benchmark_results.csv
+
+# Generate only HTML report
+python analysis/generate_report.py results/raw_output/benchmark_results.csv --type html
+
+# Generate only PDF report
+python analysis/generate_report.py results/raw_output/benchmark_results.csv --type pdf
+```
+
+**Features:**
+- Executive summary with key metrics
+- Model performance comparison tables
+- Interactive visualizations (latency distributions, cost analysis, success rates)
+- Automated recommendations for best models
+- Professional formatting for sharing and presentations
+
+#### LLM-as-Judge Evaluation
+Use advanced AI evaluation to score model responses on multiple criteria:
+
+```bash
+# Evaluate responses using GPT-4 as judge
+python analysis/llm_judge_evaluation.py results/raw_output/benchmark_results.csv
+
+# Use custom judge model and columns
+python analysis/llm_judge_evaluation.py results/raw_output/benchmark_results.csv \
+    --judge-model gpt-4 \
+    --prompt-column prompt \
+    --response-column response_text \
+    --model-column model
+```
+
+**Evaluation Criteria:**
+- Relevance: How well the response addresses the prompt
+- Accuracy: Factual correctness and truthfulness
+- Completeness: Thoroughness of the response
+- Clarity: Clear and understandable language
+- Helpfulness: Practical value to the user
+
+**Output:** JSON file with detailed scores, reasoning, and statistical summaries.
+
+#### Comparative Analysis
+Perform statistical comparisons between models with automated insights:
+
+```bash
+# Generate comprehensive comparative analysis
+python analysis/comparative_analysis.py results/raw_output/benchmark_results.csv
+
+# Specify custom output location
+python analysis/comparative_analysis.py results/raw_output/benchmark_results.csv \
+    --output-file my_comparison.json
+```
+
+**Analysis Includes:**
+- Performance comparison matrix
+- Statistical significance testing (ANOVA, t-tests)
+- Automated insights and recommendations
+- Radar charts for multi-dimensional comparison
+- Cost-benefit analysis
+
+#### Legacy Analysis Tools
+- **`analysis/statistical_test.py`**: Statistical analysis including Cohen's Kappa and Wilcoxon tests
+- **`analysis/generate_visualizations.ipynb`**: Jupyter notebook for radar charts, scatterplots, and CDF plots
 
 -----
 

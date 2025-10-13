@@ -6,6 +6,7 @@ jsonschema
 openai
 pandas
 python-dotenv
+reportlab
 requests
 ipykernel
 matplotlib
