@@ -43,8 +43,8 @@ models_to_test: Dict[str, ModelConfig] = {
         name="command-r-08-2024",
         adapter=call_cohere_api,
     ),
-    "meta-llama-3-8b-instruct": ModelConfig(
-        name="meta-llama-3-8b-instruct",
+    "meta-llama/Llama-4-Maverick-17B-128E-Instruct": ModelConfig(
+        name="meta-llama/Llama-4-Maverick-17B-128E-Instruct",
         adapter=call_huggingface_api,
     ),
 }
