@@ -1,0 +1,42 @@
+{
+  "gpt-4o-mini": {
+    "name": "gpt-4o-mini",
+    "adapter": "adapters.call_openai_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "fast"
+  },
+  "claude-3-sonnet-20240229": {
+    "name": "claude-3-sonnet-20240229",
+    "adapter": "adapters.call_anthropic_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "accurate"
+  },
+  "gemini-2.5-flash": {
+    "name": "gemini-2.5-flash",
+    "adapter": "adapters.call_google_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "fast"
+  },
+  "command-r-08-2024": {
+    "name": "command-r-08-2024",
+    "adapter": "adapters.call_cohere_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "accurate"
+  },
+  "meta-llama/Llama-4-Maverick-17B-128E-Instruct": {
+    "name": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+    "adapter": "adapters.call_huggingface_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "accurate"
+  }
+}

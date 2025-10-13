@@ -13,7 +13,7 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
-from models_config import models_to_test_legacy as models_to_test
+from models_config import models_to_test
 
 
 class RateLimiter:
@@ -129,9 +129,28 @@ async def run_benchmark(args):
             )
             return
         # Create a new dictionary with only the selected model
-        models_to_run = {args.model: models_to_test[args.model]}
+        selected_configs = {args.model: models_to_test[args.model]}
+        models_to_run = {args.model: models_to_test[args.model].adapter}
+    elif args.category:
+        # Filter models by category
+        selected_configs = {
+            k: v
+            for k, v in models_to_test.items()
+            if v.category == args.category
+        }
+        models_to_run = {k: v.adapter for k, v in selected_configs.items()}
+        if not models_to_run:
+            logger.error(
+                f"No models found for category '{args.category}'. "
+                f"Available categories: {list(set(v.category for v in models_to_test.values()))}"
+            )
+            return
+        logger.info(
+            f"Running models in category '{args.category}': {list(models_to_run.keys())}"
+        )
     else:
-        models_to_run = models_to_test
+        selected_configs = models_to_test
+        models_to_run = {k: v.adapter for k, v in models_to_test.items()}
 
     # Select the system prompt to use for this run
     try:
@@ -185,7 +204,8 @@ async def run_benchmark(args):
 
     # --- 4. MAIN BENCHMARKING LOOP ---
     rate_limiters = {
-        adapter: RateLimiter(10.0) for adapter in models_to_run.values()
+        config.adapter: RateLimiter(config.rate_limit_seconds)
+        for config in selected_configs.values()
     }
 
     async def call_model_with_rate_limit(
@@ -284,6 +304,11 @@ if __name__ == "__main__":
         type=str,
         help="Run the benchmark for a single specified model.",
         choices=list(models_to_test.keys()),
+    )
+    parser.add_argument(
+        "--category",
+        type=str,
+        help="Run the benchmark for models in a specific category (e.g., 'fast', 'accurate').",
     )
     parser.add_argument(
         "--system_prompt",

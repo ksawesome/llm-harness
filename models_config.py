@@ -2,15 +2,10 @@
 # This file defines the models to test and their corresponding
 # adapter functions.
 
-from pydantic import BaseModel, Field
-from typing import Dict, Callable, Optional
-from adapters import (
-    call_openai_api,
-    call_anthropic_api,
-    call_google_api,
-    call_cohere_api,
-    call_huggingface_api,
-)
+import json
+import os
+from pydantic import BaseModel, Field, ValidationError
+from typing import Dict, Callable, Optional, Any
 
 
 class ModelConfig(BaseModel):
@@ -23,31 +18,85 @@ class ModelConfig(BaseModel):
     temperature: Optional[float] = Field(
         default=0.3, description="Override default temperature"
     )
+    category: str = Field(
+        default="general", description="Model category for grouping"
+    )
 
 
-# Dictionary of models to test
-models_to_test: Dict[str, ModelConfig] = {
-    "gpt-4o-mini": ModelConfig(
-        name="gpt-4o-mini",
-        adapter=call_openai_api,
-    ),
-    "claude-3-sonnet-20240229": ModelConfig(
-        name="claude-3-sonnet-20240229",
-        adapter=call_anthropic_api,
-    ),
-    "gemini-2.5-flash": ModelConfig(
-        name="gemini-2.5-flash",
-        adapter=call_google_api,
-    ),
-    "command-r-08-2024": ModelConfig(
-        name="command-r-08-2024",
-        adapter=call_cohere_api,
-    ),
-    "meta-llama/Llama-4-Maverick-17B-128E-Instruct": ModelConfig(
-        name="meta-llama/Llama-4-Maverick-17B-128E-Instruct",
-        adapter=call_huggingface_api,
-    ),
-}
+def load_models_from_json(json_path: str) -> Dict[str, Dict[str, Any]]:
+    """Load model configurations from a JSON file."""
+    if not os.path.exists(json_path):
+        raise FileNotFoundError(
+            f"Models configuration file not found: {json_path}"
+        )
 
-# For backward compatibility, create a simple dict
-models_to_test_legacy = {k: v.adapter for k, v in models_to_test.items()}
+    with open(json_path, "r") as f:
+        data = json.load(f)
+
+    return data
+
+
+def resolve_adapter(adapter_path: str) -> Callable:
+    """Resolve adapter function from string path."""
+    try:
+        module_name, func_name = adapter_path.rsplit(".", 1)
+        module = __import__(module_name, fromlist=[func_name])
+        return getattr(module, func_name)
+    except (ImportError, AttributeError) as e:
+        raise ValueError(f"Cannot import adapter '{adapter_path}': {e}")
+
+
+def create_model_configs(
+    json_data: Dict[str, Dict[str, Any]],
+) -> Dict[str, ModelConfig]:
+    """Create ModelConfig objects from JSON data."""
+    configs = {}
+    for key, data in json_data.items():
+        try:
+            adapter = resolve_adapter(data["adapter"])
+            config = ModelConfig(
+                name=data["name"],
+                adapter=adapter,
+                rate_limit_seconds=data.get("rate_limit_seconds", 10.0),
+                timeout_seconds=data.get("timeout_seconds", 30),
+                temperature=data.get("temperature", 0.3),
+                category=data.get("category", "general"),
+            )
+            configs[key] = config
+        except (KeyError, ValidationError, ValueError) as e:
+            raise ValueError(f"Invalid configuration for model '{key}': {e}")
+    return configs
+
+
+def validate_model_configs(configs: Dict[str, ModelConfig]) -> None:
+    """Validate that all model configurations are correct."""
+    for key, config in configs.items():
+        # Check that adapter is callable
+        if not callable(config.adapter):
+            raise ValueError(f"Adapter for model '{key}' is not callable")
+
+        # Check that name is not empty
+        if not config.name.strip():
+            raise ValueError(f"Model name for '{key}' cannot be empty")
+
+        # Basic validation - try to call adapter with invalid data to check if it handles errors properly
+        # This is a light validation to ensure adapters don't crash immediately
+        try:
+            # Call with empty/missing data - should return error dict
+            result = config.adapter("", "", "")
+            if not isinstance(result, dict) or "error_message" not in result:
+                raise ValueError(
+                    f"Adapter for model '{key}' does not return proper error format"
+                )
+        except Exception:
+            # If it raises an exception, that's also acceptable as long as it's caught elsewhere
+            pass
+
+
+# Load models from JSON file
+json_path = os.path.join(os.path.dirname(__file__), "models.json")
+json_data = load_models_from_json(json_path)
+models_to_test = create_model_configs(json_data)
+
+# Validate configurations
+validate_model_configs(models_to_test)

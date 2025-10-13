@@ -19,6 +19,9 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Error Standardization**: Consistent error dictionaries with error codes
 - **Dependency Handling**: Graceful skipping of models when libraries are not installed
 - **Key Validation**: API key testing on startup for better reliability
+- **Dynamic Model Loading**: Load model configurations from JSON file for easy customization
+- **Model Categories**: Group models by categories (e.g., "fast", "accurate") for selective benchmarking
+- **Configuration Validation**: Automatic validation of adapter functions and model configurations
 
 The models under evaluation are:
 
@@ -69,12 +72,40 @@ llm-harness/
 |-- .pre-commit-config.yaml # Code quality hooks
 |-- check_models.py       # Model availability checker
 |-- main.py               # Main benchmarking script
-|-- models_config.py      # Model configuration management
+|-- models.json           # Model configurations (JSON format)
 |-- pyproject.toml        # Project configuration
 |-- requirements.txt      # Dependencies
 |-- README.md             # This documentation
 |-- web_ui.py             # Modern Flask web interface
 ```
+
+## ⚙️ Model Configuration
+
+Models are configured in `models.json` for easy customization without code changes. Each model entry includes:
+
+- `name`: Model identifier
+- `adapter`: Python import path to the adapter function
+- `rate_limit_seconds`: Minimum seconds between API calls
+- `timeout_seconds`: API call timeout
+- `temperature`: Sampling temperature (optional)
+- `category`: Model category for grouping (e.g., "fast", "accurate")
+
+Example configuration:
+
+```json
+{
+  "gpt-4o-mini": {
+    "name": "gpt-4o-mini",
+    "adapter": "adapters.call_openai_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "fast"
+  }
+}
+```
+
+The system automatically validates all configurations on startup, ensuring adapters are importable and models are properly configured.
 
 -----
 
@@ -199,6 +230,14 @@ Use the `--prompt-range` flag to run a subset of prompts, e.g., first 5 prompts.
 
 ```bash
 python main.py --prompt-range 1-5
+```
+
+### Run Models by Category
+
+Use the `--category` flag to run only models in a specific category (e.g., "fast" or "accurate").
+
+```bash
+python main.py --category fast
 ```
 
 You can combine flags:
