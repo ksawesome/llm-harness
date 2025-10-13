@@ -82,16 +82,16 @@ async def run_benchmark(args):
             "COHERE_API_KEY": "Cohere",
             "HUGGINGFACE_API_KEY": "Hugging Face",
         }
-        
+
         missing_keys = []
         for key, provider in required_keys.items():
             if not os.getenv(key):
                 missing_keys.append(f"{provider} ({key})")
-        
+
         if missing_keys:
             logger.error(f"Missing API keys: {', '.join(missing_keys)}")
             return False
-        
+
         # Test basic connectivity (optional, can be disabled for faster startup)
         logger.info("API keys validated successfully.")
         return True

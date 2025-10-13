@@ -46,7 +46,9 @@ def call_anthropic_api(
     This function adheres to the standardized adapter interface.
     """
     if model_name not in SUPPORTED_MODELS:
-        print(f"Warning: Model '{model_name}' is not in the list of supported Anthropic models. It may be deprecated or invalid.")
+        print(
+            f"Warning: Model '{model_name}' is not in the list of supported Anthropic models. It may be deprecated or invalid."
+        )
 
     if not client:
         return {

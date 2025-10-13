@@ -80,7 +80,9 @@ def call_huggingface_api(
         # LIMITATION: The Hugging Face Serverless Inference API does not return token counts.
         # This is a key finding for the benchmark. We will estimate using tiktoken.
         try:
-            encoding = tiktoken.get_encoding("cl100k_base")  # Similar to Llama tokenization
+            encoding = tiktoken.get_encoding(
+                "cl100k_base"
+            )  # Similar to Llama tokenization
             tokens_in = len(encoding.encode(prompt_text))
             tokens_out = len(encoding.encode(response_text))
         except Exception:
