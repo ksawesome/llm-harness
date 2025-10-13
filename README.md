@@ -251,7 +251,18 @@ pre-commit install
 pytest
 ```
 
-### 6\. Environment Variables
+### 6\. API Documentation (Optional)
+
+Generate API documentation using Sphinx:
+
+```bash
+pip install -e .[dev]  # Includes Sphinx
+cd docs
+sphinx-build -b html . _build/html
+# Open _build/html/index.html in browser
+```
+
+### 7\. Environment Variables
 
 Copy `.env.example` to `.env` and fill in your API keys:
 
@@ -581,6 +592,41 @@ pre-commit install
 # Run tests
 pytest
 ```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### API Key Errors
+- **Error**: `AuthenticationError: Invalid API key`
+- **Solution**: Check your `.env` file and ensure API keys are correctly set for the models you're using.
+
+#### Model Deprecation Warnings
+- **Error**: `Warning: Model 'xyz' is not in the list of supported models`
+- **Solution**: Update `models.json` with current model names. Check provider documentation for latest model IDs.
+
+#### Import Errors
+- **Error**: `ModuleNotFoundError: No module named 'xyz'`
+- **Solution**: Install missing dependencies: `pip install -e .[dev]`
+
+#### Rate Limiting
+- **Error**: `RateLimitError: Too many requests`
+- **Solution**: Increase `rate_limit_seconds` in `models.json` or reduce concurrent requests.
+
+#### Memory Issues
+- **Error**: `MemoryError` or slow performance
+- **Solution**: Reduce batch size or run fewer models simultaneously.
+
+#### Docker Issues
+- **Error**: Container fails to start
+- **Solution**: Ensure `.env` file is mounted: `docker run --env-file .env ...`
+
+### Getting Help
+
+If you encounter issues not covered here:
+1. Check the logs in the `logs/` directory
+2. Run with `--dry-run` to test configuration
+3. Open an issue on GitHub with error details
 
 -----
 
