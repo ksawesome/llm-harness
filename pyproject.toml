@@ -10,26 +10,29 @@ authors = [
     {name = "ksawesome", email = "your-email@example.com"},
 ]
 dependencies = [
-    "anthropic>=0.40.0",
-    "cohere>=5.0.0",
-    "google-generativeai>=0.8.0",
-    "openai>=1.0.0",
-    "pandas>=2.0.0",
-    "python-dotenv>=1.0.0",
-    "requests>=2.31.0",
-    "ipykernel>=6.0.0",
-    "matplotlib>=3.7.0",
-    "numpy>=1.24.0",
-    "plotly>=5.0.0",
-    "scikit-learn>=1.3.0",
-    "scipy>=1.11.0",
-    "seaborn>=0.12.0",
-    "statsmodels>=0.14.0",
-    "pydantic>=2.0.0",
-    "tenacity>=8.0.0",
-    "flask>=3.0.0",
-    "tqdm>=4.64.0",
-    "tiktoken>=0.5.0",
+    "anthropic==0.69.0",
+    "cohere==5.18.0",
+    "google-generativeai==0.8.5",
+    "openai==1.54.3",
+    "pandas==2.2.3",
+    "python-dotenv==1.0.1",
+    "requests==2.32.3",
+    "ipykernel==6.29.5",
+    "matplotlib==3.9.2",
+    "numpy==1.26.4",
+    "plotly==5.24.1",
+    "scikit-learn==1.5.2",
+    "scipy==1.14.1",
+    "seaborn==0.13.2",
+    "statsmodels==0.14.4",
+    "pydantic==2.9.2",
+    "tenacity==9.0.0",
+    "flask==3.0.4",
+    "tqdm==4.67.0",
+    "tiktoken==0.8.0",
+    "jsonschema==4.23.0",
+    "jinja2==3.1.4",
+    "reportlab==4.2.2",
 ]
 requires-python = ">=3.9"
 readme = "README.md"
@@ -40,6 +43,11 @@ dev = [
     "black>=23.0.0",
     "flake8>=6.0.0",
     "pre-commit>=3.0.0",
+]
+viz = [
+    "plotly==5.24.1",
+    "matplotlib==3.9.2",
+    "seaborn==0.13.2",
 ]
 
 [tool.setuptools]

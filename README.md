@@ -223,9 +223,26 @@ Once your virtual environment is activated, install the required Python librarie
 pip install -e .[dev]
 ```
 
-This installs the package in editable mode with development dependencies (for testing and linting).
+This installs the package in editable mode with development dependencies (for testing and linting). All dependencies are pinned to specific versions to ensure reproducible builds and avoid breaking changes.
 
-### 4\. Development Setup (Optional)
+For visualization features, install optional dependencies:
+```bash
+pip install -e .[viz]
+```
+
+### 4\. Docker Setup (Optional)
+
+For containerized deployment, use the provided Dockerfile:
+
+```bash
+# Build the Docker image
+docker build -t llm-harness .
+
+# Run the container
+docker run -p 5000:5000 --env-file .env llm-harness python web/dashboard.py
+```
+
+### 5\. Development Setup (Optional)
 
 For contributors, set up pre-commit hooks and run tests:
 
@@ -234,7 +251,7 @@ pre-commit install
 pytest
 ```
 
-### 5\. Environment Variables
+### 6\. Environment Variables
 
 Copy `.env.example` to `.env` and fill in your API keys:
 
