@@ -4,8 +4,8 @@ import requests
 import tiktoken
 
 # --- 1. DEFINE MODEL AND API DETAILS ---
-# The specific model endpoint for Llama 3 8B Instruct
-API_URL = "https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct"
+# The specific model endpoint for Llama 4 Maverick 17B 128E Instruct
+API_URL = "https://api-inference.huggingface.co/models/meta-llama/Llama-4-Maverick-17B-128E-Instruct"
 
 # --- 2. DEFINE PRICING ---
 # IMPORTANT: This is an ESTIMATE for a hosted provider. The free Hugging Face API has no direct cost,
@@ -19,7 +19,7 @@ def call_huggingface_api(
     model_name: str, prompt_text: str, system_prompt: str
 ) -> dict:
     """
-    Makes an API call to the Hugging Face Inference API for Llama 3.
+    Makes an API call to the Hugging Face Inference API for Llama 4.
     This function adheres to the standardized adapter interface.
     """
     api_key = os.getenv("HUGGINGFACE_API_KEY")

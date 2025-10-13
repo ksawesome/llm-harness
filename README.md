@@ -26,7 +26,7 @@ The models under evaluation are:
   * Anthropic Claude 3 Sonnet
   * Google Gemini 2.5 Flash
   * Cohere Command R 08-2024
-  * Meta Llama 3 8B Instruct (via Hugging Face)
+  * Meta Llama 4 Maverick 17B 128E Instruct (via Hugging Face)
 
 -----
 
