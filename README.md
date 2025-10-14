@@ -4,7 +4,7 @@ This repository contains the code for the research project, "Selection and Bench
 
 The `llm-harness` is a Python-based tool designed to systematically evaluate and compare various Large Language Models (LLMs) for integration into the Mettle learning platform. The benchmark assesses models on criteria such as pedagogical quality, contextual adaptability, cost, latency, reliability, and response quality metrics.
 
-## ✨ Key Features
+##  Key Features
 
 - **Multi-Model Support**: Evaluate 5 major LLM providers simultaneously (OpenAI, Anthropic, Google, Cohere, Hugging Face)
 - **Parallel Processing**: Concurrent API calls with rate limiting for optimal performance
@@ -42,7 +42,7 @@ The models under evaluation are:
 
 -----
 
-## 🚀 Project Structure
+##  Project Structure
 
 The project is organized into several key directories:
 
@@ -99,7 +99,7 @@ llm-harness/
 |-- README.md             # This documentation
 ```
 
-## ⚙️ Model Configuration
+##  Model Configuration
 
 Models are configured in `models.json` for easy customization without code changes. Each model entry includes:
 
@@ -127,7 +127,7 @@ Example configuration:
 
 The system automatically validates all configurations on startup, ensuring adapters are importable and models are properly configured.
 
-## 📝 Prompt System
+##  Prompt System
 
 The harness uses a robust prompt system with validation and templating capabilities.
 
@@ -168,7 +168,7 @@ python main.py --include-helm
 
 -----
 
-## 🔧 Setup Instructions
+##  Setup Instructions
 
 Follow these steps to set up the project environment.
 
@@ -275,7 +275,7 @@ cp .env.example .env
 
 -----
 
-## ▶️ How to Run the Benchmark
+##  How to Run the Benchmark
 
 The `main.py` script is the entry point for running the benchmark. You can run the full suite or target specific models and configurations using command-line arguments.
 
@@ -343,7 +343,7 @@ python web/web_ui.py
 
 Then open http://127.0.0.1:5000/ in your browser.
 
-## 📊 Output and Analysis
+##  Output and Analysis
 
 ### Benchmark Output
 
@@ -485,7 +485,7 @@ python web/dashboard.py
 
 -----
 
-## 🧪 Testing & Quality Assurance
+##  Testing & Quality Assurance
 
 The project maintains high code quality with comprehensive testing and automated checks.
 
@@ -529,7 +529,7 @@ GitHub Actions automatically:
 
 -----
 
-## 🔄 Recent Updates
+##  Recent Updates
 
 ### v0.1.0 Features
 - ✅ **Parallel Processing**: Concurrent API calls with intelligent rate limiting
@@ -572,9 +572,9 @@ GitHub Actions automatically:
 
 -----
 
-## 🤝 Contributing
+##  Contributing
 
-We welcome contributions! Please:
+I welcome contributions! Please:
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -595,7 +595,7 @@ pre-commit install
 pytest
 ```
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### Common Issues
 
@@ -632,9 +632,9 @@ If you encounter issues not covered here:
 
 -----
 
-## 📄 License
+##  License
 
-This project is part of the Mettle research initiative. See individual files for licensing details.
+See individual files for licensing details.
 
 ---
 
