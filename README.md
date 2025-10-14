@@ -320,21 +320,22 @@ pip install -e .[viz]Use `--template-vars` to provide variables for prompt templ
 
 cp .env.example .env
 
-# Populate provider keys inside .envExample template prompt:
+# Populate provider keys inside .env
 
-``````json
+Example template prompt:
 
+```
 {
+  "prompt_text": "Student: 'I need to calculate the power for a {{vehicle_type}} that weighs {{mass}}kg...'"
+}
+```
 
-### 6.5 Optional Docker Image  "prompt_text": "Student: \"I need to calculate the power for a {{vehicle_type}} that weighs {{mass}}kg...\""
+### 6.5 Optional Docker Image
 
-```}
-
-docker build -t llm-harness .```
-
+docker build -t llm-harness .
 docker run -p 5000:5000 --env-file .env llm-harness python web/dashboard.py
 
-```### HELM Prompts
+### HELM Prompts
 
 
 
