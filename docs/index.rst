@@ -1,21 +1,35 @@
 LLM Benchmarking Harness Documentation
 =====================================
 
-This documentation covers the API for the LLM Benchmarking Harness and
-supplements the user-facing guidance in the repository README.
+Welcome to the reference documentation for the LLM Benchmarking Harness. These
+pages complement the numbered README guides by describing module APIs, expected
+data flows, and extension points in greater technical detail.
 
-The primary modules documented here are:
+### Building the Documentation
 
-* :mod:`adapters` - provider-specific integrations and mock fallbacks
-* :mod:`analysis` - report generation, comparative analytics, and judge tooling
-* :mod:`web` - Flask dashboards for interactive exploration
-* :mod:`utils` - shared helpers for prompts, results loading, and data synthesis
+.. code-block:: bash
+
+   pip install -e .[dev]
+   cd docs
+   sphinx-build -b html . _build/html
+
+Open ``_build/html/index.html`` in a browser to browse the generated reference.
+
+### Module Guide
+
+* :mod:`adapters` – provider integrations, retry logic, and synthetic fallback.
+* :mod:`analysis` – reporting, comparative analytics, and LLM-as-judge tooling.
+* :mod:`utils` – helpers for prompts, result ingestion, and synthetic generation.
+* :mod:`web` – Flask endpoints, templating helpers, and REST exports.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    adapters
+   analysis
+   utils
+   web
 
 
 Indices and tables
