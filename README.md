@@ -288,3 +288,148 @@ The `docs/` directory contains API references and the technical handbook used by
 ---
 
 **Last Updated**: October 15, 2025
+
+## Quickstart (5-minute)
+
+Follow these minimal steps to run a quick benchmark locally.
+
+1. Clone and enter the repository:
+
+```bash
+git clone https://github.com/ksawesome/llm-harness
+cd llm-harness
+```
+
+2. Create a virtual environment and install dependencies (Conda recommended):
+
+```bash
+conda create --name llm-harness-env python=3.11 -y
+conda activate llm-harness-env
+pip install -e .[dev]
+# Optional visualization extras
+pip install -e .[viz]
+```
+
+3. Copy the example environment and add your keys (or rely on synthetic providers):
+
+```bash
+cp .env.example .env
+# Edit .env to set provider keys (OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.)
+```
+
+4. Run a dry-run to validate configuration without calling live APIs:
+
+```bash
+python main.py --dry-run --prompt-range 1-3
+```
+
+5. Run a quick, synthetic-only benchmark:
+
+```bash
+python main.py --model gpt-4o-mini --prompt-range 1-5 --include-helm
+```
+
+6. Start the web dashboard (for exploration of results):
+
+```bash
+python web/web_ui.py
+# Open http://127.0.0.1:5000/ in your browser
+```
+
+If you need operational detail beyond the Quickstart, consult the technical handbook (`docs/technical-handbook.md`) which documents architecture, adapter contracts, and troubleshooting.
+
+## CLI Reference (common flags)
+
+The harness exposes a compact set of flags for targeted execution. Below are the most useful for daily work.
+
+- `--model <model-key>`: Run only a single model defined in `models.json`.
+- `--category <name>`: Run all models with the specified `category` value.
+- `--system_prompt <name>`: Choose the system prompt (defaults to `strict_socratic`).
+- `--include-helm`: Merge HELM-style prompts into the prompt set for robustness testing.
+- `--prompt-range start-end` or `--prompt-range 5`: Execute a contiguous slice of prompts for quick validation.
+- `--dry-run`: Validate configuration and show what would run without issuing API calls.
+- `--template-vars '{"k1": "v1", "k2": 3}'`: Provide JSON-encoded template variables for Jinja2 expansion (note proper shell quoting).
+
+Example — combining flags:
+
+```bash
+python main.py --model gemini-2.5-flash --prompt-range 1-5 --include-helm --template-vars '{"vehicle_type":"car"}' --system_prompt neutral_instruction
+```
+
+## Example `models.json` entry
+
+A small example showing the fields the harness expects for each model. Keep this file declarative and lightweight.
+
+```json
+{
+  "gpt-4o-mini": {
+    "name": "gpt-4o-mini",
+    "adapter": "adapters.call_openai_api",
+    "rate_limit_seconds": 10.0,
+    "timeout_seconds": 30,
+    "temperature": 0.3,
+    "category": "fast"
+  }
+}
+```
+
+Tip: Use `models_config.py` to validate entries before running a full benchmark.
+
+## Interpreting Results (quick guide)
+
+Every benchmark creates a timestamped CSV under `results/raw_output/`. Core columns are:
+
+- `prompt_id`: Identifier from `data/test_prompts.json`.
+- `model`: The model key (matches `models.json`).
+- `model_version`: Adapter-provided model version string.
+- `date_time`: ISO8601 timestamp for the row.
+- `latency_ms`: Measured (or simulated) latency in milliseconds.
+- `tokens_in` / `tokens_out`: Token accounting for the request/response.
+- `cost_usd`: Estimated (or zero for synthetic) cost for the call.
+- `response_text`: The model's output text.
+- `response_length`: Character length of `response_text`.
+- `api_failed`: `True` when the harness used a fallback instead of a live API.
+
+Quick analysis snippet (Python / Pandas):
+
+```python
+import pandas as pd
+df = pd.read_csv('results/raw_output/benchmark_results_2025XXXX_XXXXXX.csv')
+# Ignore fallback rows
+live = df[~df['api_failed']]
+# Average latency and cost by model
+live.groupby('model').agg({'latency_ms':'mean', 'cost_usd':'sum'})
+```
+
+For detailed report contents (PDF, PNG exports, and LLM-as-judge outputs) see `analysis/generate_report.py` and the technical handbook for interpretation guidance.
+
+## Security & Secrets
+
+- Never commit secrets to source control. Keep `.env` in `.gitignore` (use `.env.example` as a template).
+- For CI, set provider keys as encrypted secrets in GitHub Actions (or use your organization's secret manager) and inject them into the environment at runtime.
+- Rotate API keys regularly and use least-privilege keys when possible.
+- When running third-party providers in CI, prefer the `--dry-run` and synthetic flows for smoke tests to avoid incurring costs or exposing secrets.
+
+## FAQ (short)
+
+Q: Why are synthetic responses useful?
+A: They provide deterministic, reproducible outputs for offline testing, CI, and analysis development without incurring API costs or being rate-limited.
+
+Q: How do I add a new provider adapter?
+A: Implement a callable in `adapters/<provider>_adapter.py`, export it in `adapters/__init__.py`, and create a `models.json` entry. The technical handbook provides a complete adapter checklist.
+
+Q: Sphinx documentation fails to build — what now?
+A: Run `pip install -e .[dev]` and build docs locally; if autodoc fails, check that optional provider dependencies are installed or mock imports in `docs/conf.py`.
+
+## Contributing (expanded)
+
+When contributing, follow this PR checklist:
+
+- Run `pre-commit run --all-files` and fix issues reported.
+- Run full test suite with `pytest` and add tests for new behavior.
+- Update `README.md` and `docs/technical-handbook.md` with operational or API changes.
+- Write concise commit messages and prefer `feat:`, `fix:`, `docs:`, `test:` prefixes for clarity.
+
+## License
+
+See the repository `LICENSE` file for full licensing details. If no LICENSE is present, contact the maintainers before distributing derived work.

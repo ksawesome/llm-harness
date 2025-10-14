@@ -282,3 +282,154 @@ PY
 ---
 
 **Last Updated**: October 15, 2025
+
+# Adapter Contract (developer-facing)
+
+Adapters are the core pluggable interface in the harness. To remain compatible with the orchestrator (`main.py`) an adapter should:
+
+- Be exported from `adapters/__init__.py` under a function name such as `call_<provider>_api`.
+- Accept the following keyword arguments (the orchestrator calls adapters with these names):
+  - `model_name: str` — the model key from `models.json`.
+  - `prompt_text: str` — fully-expanded prompt text including any teacher context.
+  - `system_prompt: str` — the system-level instruction for the run.
+- Return a dictionary containing at minimum the following keys (the harness relies on these to produce CSV rows):
+  - `model_version: str`
+  - `latency_ms: float`
+  - `tokens_in: int`
+  - `tokens_out: int`
+  - `cost_usd: float`
+  - `response_text: str`
+  - `error_message: str | None`
+  - `error_code: str | None`
+  - `headers: dict` (optional headers returned by the provider)
+
+Recommended (additional) keys to include when available:
+- `prompt_id`, `synthetic` (bool), `synthetic_source`, `seed`, `generated_at`
+
+Example (signature used by existing synthetic adapters):
+
+```python
+def call_openai_api(model_name: str, prompt_text: str, system_prompt: str) -> dict:
+    # Implementation here
+    return {
+        "model_version": "gpt-4o-mini-2025-10",
+        "latency_ms": 420.5,
+        "tokens_in": 120,
+        "tokens_out": 240,
+        "cost_usd": 0.021,
+        "response_text": "...",
+        "error_message": None,
+        "error_code": None,
+        "headers": {"x-request-id": "..."},
+    }
+```
+
+Adapters should be defensive: return a structured error payload rather than raising unhandled exceptions. The orchestrator will fall back to synthetic generation on failures.
+
+# Canonical Result Schema
+
+The harness writes CSV rows with the following canonical fields (in order):
+
+- `prompt_id`, `model`, `model_version`, `date_time`, `latency_ms`, `tokens_in`, `tokens_out`, `cost_usd`, `response_text`, `error_message`, `response_length`, `api_failed`
+
+Use this schema when writing ingestion pipelines or visualizations so that dashboards remain consistent across runs.
+
+# Rate Limiter Details
+
+The `RateLimiter` in `main.py` enforces a minimum interval between calls for each adapter instance. Key points:
+
+- The limiter uses `time.monotonic()` to ensure correct behavior across system clock adjustments.
+- Configure `rate_limit_seconds` per model in `models.json` based on provider quotas and targeted concurrency.
+- If your provider exposes per-minute quotas, compute a conservative `rate_limit_seconds` as `60.0 / allowed_requests_per_minute` and add headroom for bursts.
+
+Advanced: If you want to support token-based pacing (e.g., for pacing bursts by tokens rather than requests) add a wrapper that tracks tokens over sliding windows and blocks when thresholds are exceeded.
+
+# Database Schema Guidance
+
+If using `database.BenchmarkDatabase` for persistent storage, mirror the CSV schema with indexed fields for `model`, `prompt_id`, `date_time` and `api_failed`. Example SQLite table schema (suggested):
+
+```sql
+CREATE TABLE IF NOT EXISTS runs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  prompt_id TEXT,
+  model TEXT,
+  model_version TEXT,
+  date_time TEXT,
+  latency_ms REAL,
+  tokens_in INTEGER,
+  tokens_out INTEGER,
+  cost_usd REAL,
+  response_text TEXT,
+  error_message TEXT,
+  response_length INTEGER,
+  api_failed BOOLEAN
+);
+CREATE INDEX IF NOT EXISTS idx_runs_model ON runs(model);
+CREATE INDEX IF NOT EXISTS idx_runs_prompt ON runs(prompt_id);
+```
+
+Persisting aggregated summaries (daily model-level metrics) as a separate table can accelerate dashboard queries.
+
+# Testing Strategy for Adapters
+
+- Unit tests: Patch HTTP clients and verify adapter returns the expected schema, including error payloads for non-2xx responses.
+- Integration (offline): Use `--dry-run` or force synthetic providers to validate orchestration logic end-to-end.
+- Property-style tests: For mock providers, assert deterministic outputs for the same prompt and provider combination (seed invariants).
+
+Example pytest target for a new adapter:
+
+```python
+def test_my_adapter_success(monkeypatch):
+    monkeypatch.setattr('adapters.my_adapter.requests.post', fake_post)
+    result = call_my_adapter('my-model', 'hello', 'sys')
+    assert isinstance(result, dict)
+    assert 'response_text' in result
+```
+
+# Performance Tuning
+
+- IO-bound concurrency is primarily limited by the provider rate limits. Start by setting `rate_limit_seconds` conservatively and gradually reduce while monitoring `RateLimitError` or provider-side throttling headers.
+- For heavy analysis (report generation), use dedicated workers or batch processing so the benchmarking runs are not interrupted by CPU-heavy plotting.
+- Monitor memory during large template expansions; consider streaming template expansion to disk for very large combinatorial prompt sets.
+
+# Sphinx Documentation Best Practices
+
+- Prefer `.. automodule:: adapters.openai_adapter` with explicit `:members:` for adapter-level API docs.
+- Use `.. note::` or `.. warning::` in the docs to draw attention to behavior differences between synthetic and live flows.
+- If autodoc imports optional provider SDKs, either install those extras in CI/doc builder or mock them in `docs/conf.py` via `autodoc_mock_imports`.
+
+# CI and Release Process
+
+- Ensure `pytest` and `pre-commit` run for every PR via GitHub Actions. Keep test files and pre-commit config in sync with CI.
+- Release flow (recommended):
+  1. Bump `pyproject.toml` version.
+  2. Update `docs/technical-handbook.md` release notes and `README` changelog.
+  3. Tag the commit (`git tag -a vX.Y.Z -m "Release vX.Y.Z"`).
+  4. Push the tag and open a GitHub release with highlights.
+
+# Observability and Debugging Tips
+
+- To debug runtime failures, increase logging and collect the run log from `logs/benchmark_YYYYMMDD_HHMMSS.log`.
+- Use `--dry-run` to confirm prompt/template expansion and `--prompt-range` to isolate suspect prompts.
+- When investigating discrepancies between models, export exemplar rows from `results/raw_output/` and inspect `response_text`, `response_length`, and token counts.
+
+# Appendix: Additional Commands
+
+```
+# Build docs locally
+pip install -e .[dev]
+cd docs
+sphinx-build -b html . _build/html
+
+# Generate synthetic data for development
+python - <<'PY'
+from utils.mock_provider import ensure_synthetic_runs
+ensure_synthetic_runs()
+PY
+
+# Inspect DB stats
+python - <<'PY'
+from database import BenchmarkDatabase
+print(BenchmarkDatabase().get_database_stats())
+PY
+```
