@@ -64,12 +64,12 @@ llm-harness/
 ├── utils/                       # Shared helpers (mock provider, result loader, etc.)
 ├── web/                         # Flask apps and static assets
 ├── .github/workflows/           # CI pipelines (pytest + pre-commit)
-├── .gitignore                   # Root ignore rules (augmented with readme-temp.md)
+├── .gitignore                   # Root ignore rules
 ├── templates/.gitignore         # Template-specific ignores
 ├── web/.gitignore               # Web asset ignores
 ├── Dockerfile                   # Production image build
 ├── README.md                    # Summary documentation
-├── readme-temp.md               # Technical handbook (ignored in version control)
+├── docs/technical-handbook.md   # Technical handbook (versioned in repo)
 ├── check_models.py              # Quick CLI to verify provider credentials
 ├── database.py                  # SQLite storage engine
 ├── environment.yml              # Conda environment (with comments for pip fallbacks)
