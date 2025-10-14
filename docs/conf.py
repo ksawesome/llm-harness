@@ -35,3 +35,19 @@ autodoc_default_options = {
 # -- Napoleon settings ------------------------------------------------------
 napoleon_google_docstring = True
 napoleon_numpy_docstring = True
+
+# -- Autodoc mock imports -------------------------------------------------
+autodoc_mock_imports = [
+    "cohere",
+    "google",
+    "google.generativeai",
+    "tiktoken",
+    "requests",
+    "openai",
+    "anthropic",
+    "transformers",
+    "huggingface_hub",
+    "plotly",
+    "matplotlib",
+    "reportlab",
+]

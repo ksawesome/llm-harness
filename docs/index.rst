@@ -30,6 +30,7 @@ Open ``_build/html/index.html`` in a browser to browse the generated reference.
    analysis
    utils
    web
+   cli
 
 
 Indices and tables
