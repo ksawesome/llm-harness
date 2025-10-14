@@ -1,5 +1,6 @@
 import os
 import time
+
 import cohere
 
 # --- 1. INITIALIZE THE CLIENT ---

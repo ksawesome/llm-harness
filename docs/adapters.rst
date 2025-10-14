@@ -3,6 +3,10 @@ Adapters
 
 This module contains API adapters for different LLM providers.
 
+Each adapter delegates to the corresponding provider SDK when keys are
+available and gracefully falls back to :mod:`utils.mock_provider` for
+synthetic data generation during tests or offline analysis.
+
 .. automodule:: adapters
    :members:
    :undoc-members:

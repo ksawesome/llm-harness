@@ -3,28 +3,27 @@ Automated Report Generation for LLM Benchmarking Results
 Generates PDF and HTML reports from analysis data.
 """
 
+import base64
 import html
+import io
 import math
+import os
+from datetime import datetime
+
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.platypus import (
-    SimpleDocTemplate,
     Paragraph,
+    SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
 )
-import os
-from datetime import datetime
-from typing import Dict, List, Optional
-import base64
-import io
-
-import pandas as pd
 
 from utils.result_loader import load_results
 
@@ -58,9 +57,9 @@ class BenchmarkReportGenerator:
 
         return df
 
-    def generate_summary_stats(self, df: pd.DataFrame) -> Dict:
+    def generate_summary_stats(self, df: pd.DataFrame) -> dict:
         """Generate summary statistics for the report."""
-        summary: Dict[str, object] = {}
+        summary: dict[str, object] = {}
 
         # Overall statistics
         summary["total_requests"] = len(df)
@@ -90,7 +89,7 @@ class BenchmarkReportGenerator:
         summary["overall_latency_percentiles"] = latency_quantiles
 
         # Per-model statistics
-        model_stats: List[Dict[str, object]] = []
+        model_stats: list[dict[str, object]] = []
         for model in df["model"].unique():
             model_df = df[df["model"] == model]
             request_count = len(model_df)
@@ -184,10 +183,12 @@ class BenchmarkReportGenerator:
         return summary
 
     def create_visualizations(
-        self, df: pd.DataFrame, summary: Optional[Dict] = None
-    ) -> Dict[str, str]:
+        self, df: pd.DataFrame, summary: dict | None = None
+    ) -> dict[str, str]:
         """Create visualizations and return as base64 encoded images."""
-        images: Dict[str, str] = {}
+        images: dict[str, str] = {}
+        images_dir = os.path.join(self.output_dir, "images")
+        os.makedirs(images_dir, exist_ok=True)
 
         # 1. Latency distribution by model
         plt.figure(figsize=(12, 6))
@@ -199,6 +200,15 @@ class BenchmarkReportGenerator:
             plt.title("Latency Distribution by Model")
             plt.xticks(rotation=45)
             plt.tight_layout()
+
+            # Save to file
+            filename = (
+                f"latency_distribution_{int(datetime.now().timestamp())}.png"
+            )
+            filepath = os.path.join(images_dir, filename)
+            plt.savefig(filepath, dpi=300, bbox_inches="tight")
+            print(f"Saved latency plot to: {filepath}")
+
             images["latency_boxplot"] = self._fig_to_base64()
 
         # 2. Cost comparison
@@ -294,8 +304,8 @@ class BenchmarkReportGenerator:
         return images
 
     def _create_radar_chart(
-        self, model_stats: List[Dict[str, object]]
-    ) -> Optional[str]:
+        self, model_stats: list[dict[str, object]]
+    ) -> str | None:
         stats_df = pd.DataFrame(model_stats)
         if stats_df.empty:
             return None
@@ -368,7 +378,7 @@ class BenchmarkReportGenerator:
             scaled = 1 - scaled
         return scaled.fillna(0.5)
 
-    def _model_sort_key(self, stat: Dict[str, object]) -> float:
+    def _model_sort_key(self, stat: dict[str, object]) -> float:
         return self._safe_float(stat.get("avg_latency"), default=float("inf"))
 
     def _safe_float(
@@ -392,7 +402,7 @@ class BenchmarkReportGenerator:
             return default
         return result
 
-    def _summarize_error_categories(self, df: pd.DataFrame) -> Dict[str, int]:
+    def _summarize_error_categories(self, df: pd.DataFrame) -> dict[str, int]:
         if "error_message" not in df.columns:
             return {}
         categories = (
@@ -422,12 +432,12 @@ class BenchmarkReportGenerator:
         return "Other Failure"
 
     def _extract_qualitative_examples(
-        self, df: pd.DataFrame, max_examples: Optional[int] = None
-    ) -> List[Dict[str, object]]:
+        self, df: pd.DataFrame, max_examples: int | None = None
+    ) -> list[dict[str, object]]:
         if df.empty:
             return []
 
-        examples: List[Dict[str, object]] = []
+        examples: list[dict[str, object]] = []
         for model in sorted(df["model"].unique()):
             model_df = df[df["model"] == model]
             success_df = model_df[model_df["error_message"].fillna("") == ""]
@@ -459,7 +469,7 @@ class BenchmarkReportGenerator:
         df: pd.DataFrame,
         prefer_high: bool,
         use_error_text: bool = False,
-    ) -> Optional[Dict[str, object]]:
+    ) -> dict[str, object] | None:
         if df.empty:
             return None
 
@@ -472,7 +482,7 @@ class BenchmarkReportGenerator:
             response_text = row.get("error_message") or ""
         tokens_out = int(self._safe_float(row.get("tokens_out"), 0.0))
         raw_score = row.get("score")
-        score_val: Optional[float] = None
+        score_val: float | None = None
         if raw_score is not None:
             parsed_score = self._safe_float(
                 raw_score, default=float("nan"), allow_nan=True
@@ -521,7 +531,7 @@ class BenchmarkReportGenerator:
         return f"data:image/png;base64,{img_base64}"
 
     def generate_pdf_report(
-        self, summary: Dict, images: Dict[str, str], output_path: str
+        self, summary: dict, images: dict[str, str], output_path: str
     ):
         """Generate PDF report."""
         doc = SimpleDocTemplate(output_path, pagesize=A4)
@@ -791,7 +801,7 @@ class BenchmarkReportGenerator:
         doc.build(story)
 
     def generate_html_report(
-        self, summary: Dict, images: Dict[str, str], output_path: str
+        self, summary: dict, images: dict[str, str], output_path: str
     ):
         """Generate HTML report."""
         model_rows = "".join(
@@ -830,7 +840,7 @@ class BenchmarkReportGenerator:
         else:
             error_list_html = "<li>No errors recorded.</li>"
 
-        qualitative_sections: List[str] = []
+        qualitative_sections: list[str] = []
         for example in summary.get("qualitative_examples", []):
             model_name = html.escape(str(example.get("model", "")))
 

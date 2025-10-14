@@ -1,7 +1,9 @@
-import pytest
 import json
-import tempfile
 import os
+import tempfile
+
+import pytest
+
 from main import load_data
 
 

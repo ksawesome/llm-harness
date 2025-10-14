@@ -3,14 +3,14 @@ Database Storage for Benchmark Results
 Provides SQLite-based storage and querying for benchmark results.
 """
 
-import sqlite3
 import csv
-import pandas as pd
-from pathlib import Path
-from typing import List, Dict, Optional
-from datetime import datetime
 import json
 import logging
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+import pandas as pd
 
 from utils.result_loader import load_results
 
@@ -117,7 +117,7 @@ class BenchmarkDatabase:
                 f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
             )
 
-    def store_benchmark_run(self, run_id: str, config: Dict) -> bool:
+    def store_benchmark_run(self, run_id: str, config: dict) -> bool:
         """Store a benchmark run configuration."""
         try:
             with sqlite3.connect(self.db_path) as conn:
@@ -139,7 +139,7 @@ class BenchmarkDatabase:
     def store_results_from_source(
         self,
         source_path: str,
-        run_id: Optional[str] = None,
+        run_id: str | None = None,
         include_synthetic: bool = True,
     ) -> bool:
         """Import benchmark results from a CSV file or directory."""
@@ -168,9 +168,9 @@ class BenchmarkDatabase:
             )
             return False
 
-        run_configs: Dict[str, Dict] = {}
+        run_configs: dict[str, dict] = {}
         for rid, group in df.groupby("run_id"):
-            config: Dict[str, object] = {
+            config: dict[str, object] = {
                 "source": str(source_path),
                 "row_count": int(len(group)),
             }
@@ -190,7 +190,7 @@ class BenchmarkDatabase:
         for rid, config in run_configs.items():
             self.store_benchmark_run(rid, config)
 
-        def _optional(value: object) -> Optional[str]:
+        def _optional(value: object) -> str | None:
             if value in (None, ""):
                 return None
             if isinstance(value, float) and pd.isna(value):
@@ -253,7 +253,7 @@ class BenchmarkDatabase:
         )
 
     def store_analysis_result(
-        self, run_id: str, analysis_type: str, analysis_data: Dict
+        self, run_id: str, analysis_type: str, analysis_data: dict
     ) -> bool:
         """Store analysis results."""
         try:
@@ -275,7 +275,7 @@ class BenchmarkDatabase:
             self.logger.error(f"Failed to store analysis result: {e}")
             return False
 
-    def get_runs(self, limit: int = 10) -> List[Dict]:
+    def get_runs(self, limit: int = 10) -> list[dict]:
         """Get list of benchmark runs."""
         with sqlite3.connect(self.db_path) as conn:
             conn.row_factory = sqlite3.Row
@@ -287,10 +287,10 @@ class BenchmarkDatabase:
 
     def get_results(
         self,
-        run_id: Optional[str] = None,
-        model: Optional[str] = None,
+        run_id: str | None = None,
+        model: str | None = None,
         limit: int = 1000,
-        synthetic: Optional[bool] = None,
+        synthetic: bool | None = None,
     ) -> pd.DataFrame:
         """Query benchmark results."""
         query = "SELECT * FROM benchmark_results WHERE 1=1"
@@ -314,7 +314,7 @@ class BenchmarkDatabase:
             return pd.read_sql_query(query, conn, params=params)
 
     def get_model_stats(
-        self, run_id: Optional[str] = None, synthetic: Optional[bool] = None
+        self, run_id: str | None = None, synthetic: bool | None = None
     ) -> pd.DataFrame:
         """Get aggregated statistics by model."""
         query = """
@@ -346,7 +346,7 @@ class BenchmarkDatabase:
         with sqlite3.connect(self.db_path) as conn:
             return pd.read_sql_query(query, conn, params=params)
 
-    def get_run_comparison(self, run_ids: List[str]) -> pd.DataFrame:
+    def get_run_comparison(self, run_ids: list[str]) -> pd.DataFrame:
         """Compare multiple runs."""
         placeholders = ",".join("?" * len(run_ids))
 
@@ -418,7 +418,7 @@ class BenchmarkDatabase:
             self.logger.info(f"Cleaned up {deleted_count} old runs")
             return deleted_count
 
-    def get_database_stats(self) -> Dict:
+    def get_database_stats(self) -> dict:
         """Get database statistics."""
         with sqlite3.connect(self.db_path) as conn:
             # Get table counts

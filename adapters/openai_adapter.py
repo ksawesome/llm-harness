@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Dict
 
 from utils.mock_provider import call_mock_api
 
@@ -12,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def call_openai_api(
     model_name: str, prompt_text: str, system_prompt: str
-) -> Dict:
+) -> dict:
     """Return a synthetic response for an OpenAI model.
 
     The return payload mirrors the structure produced by the live adapter,

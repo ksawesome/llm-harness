@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 import os
 import sys
+from pathlib import Path
 
-from flask import Flask, abort, render_template
 import pandas as pd
+from flask import Flask, abort, render_template
 
 from utils.result_loader import load_results
 

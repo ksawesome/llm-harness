@@ -8,11 +8,11 @@ This allows for cleaner imports, e.g., 'from adapters import call_openai_api'
 instead of 'from adapters.openai_adapter import call_openai_api'.
 """
 
-from .openai_adapter import call_openai_api
 from .anthropic_adapter import call_anthropic_api
-from .google_adapter import call_google_api
 from .cohere_adapter import call_cohere_api
+from .google_adapter import call_google_api
 from .huggingface_adapter import call_huggingface_api
+from .openai_adapter import call_openai_api
 
 # The __all__ list defines the public API for this package.
 # When a user performs 'from adapters import *', only these names

@@ -5,12 +5,12 @@ from __future__ import annotations
 import csv
 import json
 import os
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable, List, Optional
 
 import pandas as pd
 
-STANDARD_COLUMNS: List[str] = [
+STANDARD_COLUMNS: list[str] = [
     "prompt_id",
     "model",
     "model_version",
@@ -47,7 +47,7 @@ def load_results(
     """
 
     source_path = Path(source)
-    frames: List[pd.DataFrame] = []
+    frames: list[pd.DataFrame] = []
 
     if source_path.is_file() and source_path.suffix.lower() == ".csv":
         frames.append(_load_csv(source_path))
@@ -76,15 +76,15 @@ def load_results(
     return _ensure_columns(combined)
 
 
-def _load_csvs_from_directory(directory: Path) -> List[pd.DataFrame]:
-    csv_files: List[Path] = []
+def _load_csvs_from_directory(directory: Path) -> list[pd.DataFrame]:
+    csv_files: list[Path] = []
     csv_files.extend(sorted(directory.glob("*.csv")))
 
     raw_output = directory / "raw_output"
     if raw_output.exists() and raw_output.is_dir():
         csv_files.extend(sorted(raw_output.glob("*.csv")))
 
-    frames: List[pd.DataFrame] = []
+    frames: list[pd.DataFrame] = []
     for csv_file in csv_files:
         frames.append(_load_csv(csv_file))
     return frames
@@ -165,7 +165,7 @@ def _load_csv(csv_path: Path) -> pd.DataFrame:
 
 
 def _load_synthetic_dir(root: Path) -> pd.DataFrame:
-    records: List[dict] = []
+    records: list[dict] = []
 
     if not root.exists():
         return pd.DataFrame(columns=STANDARD_COLUMNS)
@@ -225,7 +225,7 @@ def _load_synthetic_dir(root: Path) -> pd.DataFrame:
 
 def _resolve_synthetic_root(
     base_path: Path, synthetic_root: str | Path | None
-) -> Optional[Path]:
+) -> Path | None:
     if synthetic_root:
         candidate = Path(synthetic_root)
         return candidate if candidate.exists() else None

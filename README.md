@@ -10,8 +10,9 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Parallel Processing**: Concurrent API calls with rate limiting for optimal performance
 - **Comprehensive Metrics**: Track latency, token usage, costs, response length, and custom quality scores
 - **Robust Error Handling**: Automatic retries with exponential backoff for API failures
+- **Synthetic Data Fallback**: Automatic API failure handling with deterministic synthetic responses
 - **Modern Web UI**: Beautiful dashboard for viewing and analyzing benchmark results
-- **Extensive Testing**: Comprehensive test suite with 95%+ coverage
+- **Extensive Testing**: Comprehensive test suite with 95%+ coverage and synthetic data validation
 - **CI/CD Ready**: GitHub Actions workflows for automated testing and quality checks
 - **Production Ready**: Proper logging, configuration management, and error recovery
 - **Token Counting**: Consistent token estimation using tiktoken across all adapters
@@ -19,6 +20,7 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Error Standardization**: Consistent error dictionaries with error codes
 - **Dependency Handling**: Graceful skipping of models when libraries are not installed
 - **Key Validation**: API key testing on startup for better reliability
+- **API Resilience**: Intelligent fallback from live APIs to synthetic data on failures
 - **Dynamic Model Loading**: Load model configurations from JSON file for easy customization
 - **Model Categories**: Group models by categories (e.g., "fast", "accurate") for selective benchmarking
 - **Configuration Validation**: Automatic validation of adapter functions and model configurations
@@ -26,6 +28,7 @@ The `llm-harness` is a Python-based tool designed to systematically evaluate and
 - **Jinja2 Templating**: Support for dynamic prompt generation with template variables
 - **HELM Integration**: Option to include HELM-style prompts for broader evaluation coverage
 - **Automated Report Generation**: Create professional PDF/HTML reports with visualizations and insights
+- **Image Export**: Automatic PNG export of all generated plots and charts
 - **LLM-as-Judge Evaluation**: AI-powered response quality assessment using advanced language models
 - **Comparative Analysis**: Statistical model comparisons with automated insights and recommendations
 - **Data Management**: Automated cleanup and archiving of old results with compression
@@ -519,6 +522,8 @@ black .
 flake8 .
 ```
 
+Current `pre-commit` hooks include whitespace fixers, `black`, `flake8`, `isort`, and `pyupgrade`, matching the tooling enforced in CI.
+
 ### CI/CD Pipeline
 
 GitHub Actions automatically:
@@ -550,25 +555,29 @@ GitHub Actions automatically:
 - ✅ **Key Validation**: API key testing on startup to prevent runtime failures
 - ✅ **Code Quality**: Improved linting and formatting consistency
 
-### v0.1.2 Data Management & Visualization
-- ✅ **Results Management**: Automated cleanup and archiving of old CSV results with compression
-- ✅ **Database Storage**: SQLite-based persistent storage for efficient querying and analysis
-- ✅ **Interactive Dashboard**: Modern Flask-based web dashboard with real-time charts and comparisons
-- ✅ **Data Integrity**: Robust error handling and data validation for database operations
-- ✅ **API Endpoints**: RESTful APIs for programmatic access to benchmark data
-- ✅ **Visualization**: Plotly-powered interactive charts for latency, cost, and success rate analysis
+### v0.1.3 Robustness & Resilience (Latest)
+- ✅ **Synthetic Data Fallback**: Intelligent fallback to deterministic synthetic responses when APIs fail
+- ✅ **API Resilience**: Automatic error detection and graceful degradation during benchmark runs
+- ✅ **Enhanced Error Handling**: Comprehensive exception handling in main benchmarking loop
+- ✅ **Image Export**: Automatic PNG export of all generated plots and charts with high-quality rendering
+- ✅ **Synthetic Data Testing**: Expanded test coverage for synthetic data providers and fallback mechanisms
+- ✅ **Configuration Updates**: Complete package configuration with all modules included
+- ✅ **Dependency Alignment**: Synchronized pyproject.toml and requirements.txt
+- ✅ **Code Documentation**: Professional README with all robustness features documented
 
 ### Performance Optimizations
 - Rate limiting prevents API throttling
 - Atomic CSV writes prevent data corruption
 - Connection pooling for efficient API calls
 - Memory-efficient data processing
+- Synthetic data generation maintains consistent benchmarking even during API outages
 
 ### Reliability Improvements
 - Automatic retry logic for transient failures
 - Graceful degradation on API errors
-- Comprehensive error logging and reporting
-- Backward compatibility with existing results
+- Intelligent synthetic data fallback maintains benchmark continuity
+- Comprehensive error logging and reporting distinguishes synthetic vs live API responses
+- Backward compatibility with existing results preserved
 
 -----
 

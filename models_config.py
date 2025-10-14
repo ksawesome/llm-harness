@@ -4,8 +4,10 @@
 
 import json
 import os
+from collections.abc import Callable
+from typing import Any
+
 from pydantic import BaseModel, Field, ValidationError
-from typing import Dict, Callable, Optional, Any
 
 
 class ModelConfig(BaseModel):
@@ -15,7 +17,7 @@ class ModelConfig(BaseModel):
         default=10.0, description="Minimum seconds between API calls"
     )
     timeout_seconds: int = Field(default=30, description="API call timeout")
-    temperature: Optional[float] = Field(
+    temperature: float | None = Field(
         default=0.3, description="Override default temperature"
     )
     category: str = Field(
@@ -23,14 +25,14 @@ class ModelConfig(BaseModel):
     )
 
 
-def load_models_from_json(json_path: str) -> Dict[str, Dict[str, Any]]:
+def load_models_from_json(json_path: str) -> dict[str, dict[str, Any]]:
     """Load model configurations from a JSON file."""
     if not os.path.exists(json_path):
         raise FileNotFoundError(
             f"Models configuration file not found: {json_path}"
         )
 
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
 
     return data
@@ -47,8 +49,8 @@ def resolve_adapter(adapter_path: str) -> Callable:
 
 
 def create_model_configs(
-    json_data: Dict[str, Dict[str, Any]],
-) -> Dict[str, ModelConfig]:
+    json_data: dict[str, dict[str, Any]],
+) -> dict[str, ModelConfig]:
     """Create ModelConfig objects from JSON data."""
     configs = {}
     for key, data in json_data.items():
@@ -68,7 +70,7 @@ def create_model_configs(
     return configs
 
 
-def validate_model_configs(configs: Dict[str, ModelConfig]) -> None:
+def validate_model_configs(configs: dict[str, ModelConfig]) -> None:
     """Validate that all model configurations are correct."""
     for key, config in configs.items():
         # Check that adapter is callable

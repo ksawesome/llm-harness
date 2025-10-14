@@ -3,18 +3,17 @@ Comparative Analysis Script for LLM Benchmarking Results
 Creates head-to-head comparisons between models and generates insights.
 """
 
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
-from typing import Dict, List, Optional
 import os
 from datetime import datetime
 
+import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import seaborn as sns
+from scipy import stats
 
-from utils.result_loader import load_results
 from analysis.generate_report import BenchmarkReportGenerator
+from utils.result_loader import load_results
 
 
 class ComparativeAnalyzer:
@@ -97,7 +96,7 @@ class ComparativeAnalyzer:
 
         return pd.DataFrame(comparison_data).sort_values("avg_latency_ms")
 
-    def perform_statistical_tests(self, df: pd.DataFrame) -> Dict:
+    def perform_statistical_tests(self, df: pd.DataFrame) -> dict:
         """Perform statistical tests comparing model performance."""
         successful_df = self.filter_successful_responses(df)
         results = {}
@@ -122,7 +121,7 @@ class ComparativeAnalyzer:
 
     def _compare_metric(
         self, df: pd.DataFrame, metric: str, metric_name: str
-    ) -> Dict:
+    ) -> dict:
         """Compare a specific metric across models using statistical tests."""
         results = {}
 
@@ -232,8 +231,8 @@ class ComparativeAnalyzer:
         return results
 
     def create_comparison_visualizations(
-        self, df: pd.DataFrame, summary: Optional[Dict] = None
-    ) -> Dict[str, str]:
+        self, df: pd.DataFrame, summary: dict | None = None
+    ) -> dict[str, str]:
         """Create visualizations comparing model performance."""
         successful_df = self.filter_successful_responses(df)
         images = {}
@@ -407,8 +406,8 @@ class ComparativeAnalyzer:
 
     def _fig_to_base64(self) -> str:
         """Convert current matplotlib figure to base64 string."""
-        import io
         import base64
+        import io
 
         buf = io.BytesIO()
         plt.savefig(buf, format="png", dpi=150, bbox_inches="tight")
@@ -418,8 +417,8 @@ class ComparativeAnalyzer:
         return f"data:image/png;base64,{img_base64}"
 
     def generate_comparison_report(
-        self, csv_path: str, output_path: Optional[str] = None
-    ) -> Dict:
+        self, csv_path: str, output_path: str | None = None
+    ) -> dict:
         """
         Generate comprehensive comparative analysis report.
 
@@ -494,8 +493,8 @@ class ComparativeAnalyzer:
         return results
 
     def _generate_insights(
-        self, comparison_df: pd.DataFrame, stats_results: Dict
-    ) -> List[str]:
+        self, comparison_df: pd.DataFrame, stats_results: dict
+    ) -> list[str]:
         """Generate human-readable insights from the analysis."""
         insights = []
 

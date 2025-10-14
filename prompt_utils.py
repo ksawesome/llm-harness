@@ -5,10 +5,10 @@ Handles loading, validation, and templating of prompts.
 
 import json
 import os
-from typing import Dict, List, Any, Optional
-from jinja2 import Template, TemplateError
-from jsonschema import validate, ValidationError, SchemaError
+from typing import Any
 
+from jinja2 import Template, TemplateError
+from jsonschema import SchemaError, ValidationError, validate
 
 # JSON Schemas for validation
 TEST_PROMPTS_SCHEMA = {
@@ -38,7 +38,7 @@ SYSTEM_PROMPTS_SCHEMA = {
 
 
 def validate_json_data(
-    data: Any, schema: Dict[str, Any], filename: str
+    data: Any, schema: dict[str, Any], filename: str
 ) -> None:
     """
     Validate JSON data against a schema.
@@ -63,7 +63,7 @@ def validate_json_data(
 
 
 def load_and_validate_prompts(
-    prompts_file: str, schema: Dict[str, Any]
+    prompts_file: str, schema: dict[str, Any]
 ) -> Any:
     """
     Load and validate prompts from a JSON file.
@@ -83,14 +83,14 @@ def load_and_validate_prompts(
     if not os.path.exists(prompts_file):
         raise FileNotFoundError(f"Prompts file not found: {prompts_file}")
 
-    with open(prompts_file, "r", encoding="utf-8") as f:
+    with open(prompts_file, encoding="utf-8") as f:
         data = json.load(f)
 
     validate_json_data(data, schema, os.path.basename(prompts_file))
     return data
 
 
-def load_test_prompts(prompts_file: str) -> List[Dict[str, Any]]:
+def load_test_prompts(prompts_file: str) -> list[dict[str, Any]]:
     """
     Load and validate test prompts.
 
@@ -103,7 +103,7 @@ def load_test_prompts(prompts_file: str) -> List[Dict[str, Any]]:
     return load_and_validate_prompts(prompts_file, TEST_PROMPTS_SCHEMA)
 
 
-def load_system_prompts(prompts_file: str) -> Dict[str, str]:
+def load_system_prompts(prompts_file: str) -> dict[str, str]:
     """
     Load and validate system prompts.
 
@@ -117,7 +117,7 @@ def load_system_prompts(prompts_file: str) -> Dict[str, str]:
 
 
 def render_template(
-    template_str: str, variables: Optional[Dict[str, Any]] = None
+    template_str: str, variables: dict[str, Any] | None = None
 ) -> str:
     """
     Render a Jinja2 template with variables.
@@ -143,9 +143,9 @@ def render_template(
 
 
 def expand_prompts_with_templates(
-    prompts: List[Dict[str, Any]],
-    template_vars: Optional[Dict[str, Any]] = None,
-) -> List[Dict[str, Any]]:
+    prompts: list[dict[str, Any]],
+    template_vars: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     """
     Expand prompts that contain Jinja2 templates.
 
@@ -178,7 +178,7 @@ def expand_prompts_with_templates(
     return expanded_prompts
 
 
-def get_prompt_categories(prompts: List[Dict[str, Any]]) -> List[str]:
+def get_prompt_categories(prompts: list[dict[str, Any]]) -> list[str]:
     """
     Get unique categories from prompts.
 
@@ -189,13 +189,13 @@ def get_prompt_categories(prompts: List[Dict[str, Any]]) -> List[str]:
         List of unique category names
     """
     return list(
-        set(prompt.get("category", "uncategorized") for prompt in prompts)
+        {prompt.get("category", "uncategorized") for prompt in prompts}
     )
 
 
 def filter_prompts_by_category(
-    prompts: List[Dict[str, Any]], category: str
-) -> List[Dict[str, Any]]:
+    prompts: list[dict[str, Any]], category: str
+) -> list[dict[str, Any]]:
     """
     Filter prompts by category.
 
@@ -210,8 +210,8 @@ def filter_prompts_by_category(
 
 
 def add_helm_style_prompts(
-    base_prompts: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
+    base_prompts: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     """
     Add HELM-style prompts for broader evaluation coverage.
     HELM (Holistic Evaluation of Language Models) includes various scenarios.

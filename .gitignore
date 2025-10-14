@@ -232,10 +232,19 @@ htmlcov/
 
 # Generated results and reports
 results/
-reports/
+reports/*.html
+reports/*.json
+reports/*.pdf
+reports/images/
 
 # Temporary test files
 test_successful_responses.csv
 
 # Web development config
 .hintrc
+
+# Additional generated artifacts
+*.sqlite
+*.db
+*.sqlite3
+benchmark_*.log

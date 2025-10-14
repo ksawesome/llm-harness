@@ -3,13 +3,14 @@ LLM-as-Judge Evaluation System
 Uses a powerful LLM (like GPT-4) to evaluate and score responses from other models.
 """
 
-import pandas as pd
 import asyncio
 import json
 import os
-from typing import Dict, List, Optional
 from dataclasses import dataclass
 from datetime import datetime
+
+import pandas as pd
+
 from adapters import call_openai_api
 
 
@@ -22,7 +23,7 @@ class EvaluationResult:
     response: str
     score: float
     reasoning: str
-    criteria_scores: Dict[str, float]
+    criteria_scores: dict[str, float]
     judge_model: str
     timestamp: str
 
@@ -31,7 +32,7 @@ class LLMJudgeEvaluator:
     """Evaluates model responses using LLM-as-judge methodology."""
 
     def __init__(
-        self, judge_model: str = "gpt-4", judge_api_key: Optional[str] = None
+        self, judge_model: str = "gpt-4", judge_api_key: str | None = None
     ):
         """
         Initialize the LLM judge evaluator.
@@ -165,7 +166,7 @@ Provide your evaluation in the following JSON format:
                 timestamp=datetime.now().isoformat(),
             )
 
-    def _parse_fallback_evaluation(self, response: str) -> Dict:
+    def _parse_fallback_evaluation(self, response: str) -> dict:
         """Fallback parsing for malformed JSON responses."""
         # Try to extract scores from text
         scores = {}
@@ -210,7 +211,7 @@ Provide your evaluation in the following JSON format:
         prompt_column: str = "prompt",
         response_column: str = "response",
         model_column: str = "model",
-    ) -> List[EvaluationResult]:
+    ) -> list[EvaluationResult]:
         """
         Evaluate a batch of responses.
 
@@ -249,7 +250,7 @@ Provide your evaluation in the following JSON format:
         return successful_results
 
     def save_evaluation_results(
-        self, results: List[EvaluationResult], output_path: str
+        self, results: list[EvaluationResult], output_path: str
     ):
         """Save evaluation results to JSON file."""
         results_data = []
@@ -273,9 +274,9 @@ Provide your evaluation in the following JSON format:
 
     def load_evaluation_results(
         self, input_path: str
-    ) -> List[EvaluationResult]:
+    ) -> list[EvaluationResult]:
         """Load evaluation results from JSON file."""
-        with open(input_path, "r", encoding="utf-8") as f:
+        with open(input_path, encoding="utf-8") as f:
             results_data = json.load(f)
 
         results = []
@@ -295,8 +296,8 @@ Provide your evaluation in the following JSON format:
         return results
 
     def generate_evaluation_summary(
-        self, results: List[EvaluationResult]
-    ) -> Dict:
+        self, results: list[EvaluationResult]
+    ) -> dict:
         """Generate summary statistics from evaluation results."""
         if not results:
             return {}

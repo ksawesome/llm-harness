@@ -8,15 +8,15 @@ real responses and written to ``results/synthetic`` for auditing.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
-import hashlib
 import os
 import random
+from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
 
 PROMPT_FILE = Path("data/test_prompts.json")
 SYNTHETIC_ROOT = Path(
@@ -47,15 +47,15 @@ PROVIDERS = {
 
 logger = logging.getLogger(__name__)
 
-_PROMPT_CACHE: Optional[Dict[str, Dict]] = None
-_PROMPT_TEXT_LOOKUP: Optional[Dict[str, str]] = None
+_PROMPT_CACHE: dict[str, dict] | None = None
+_PROMPT_TEXT_LOOKUP: dict[str, str] | None = None
 
 
-def _load_prompts() -> Dict[str, Dict]:
+def _load_prompts() -> dict[str, dict]:
     global _PROMPT_CACHE, _PROMPT_TEXT_LOOKUP
     if _PROMPT_CACHE is None:
         with PROMPT_FILE.open("r", encoding="utf-8") as handle:
-            prompts: List[Dict] = json.load(handle)
+            prompts: list[dict] = json.load(handle)
         _PROMPT_CACHE = {item["id"]: item for item in prompts}
         _PROMPT_TEXT_LOOKUP = {
             _normalise_text(item["prompt_text"]): item["id"]
@@ -88,7 +88,7 @@ def _index_path(provider: str) -> Path:
     return _provider_dir(provider) / "index.json"
 
 
-def _load_index(provider: str) -> Dict[str, Dict]:
+def _load_index(provider: str) -> dict[str, dict]:
     index_path = _index_path(provider)
     if index_path.exists():
         with index_path.open("r", encoding="utf-8") as handle:
@@ -96,13 +96,13 @@ def _load_index(provider: str) -> Dict[str, Dict]:
     return {}
 
 
-def _save_index(provider: str, index: Dict[str, Dict]) -> None:
+def _save_index(provider: str, index: dict[str, dict]) -> None:
     index_path = _index_path(provider)
     with index_path.open("w", encoding="utf-8") as handle:
         json.dump(index, handle, indent=2, ensure_ascii=False)
 
 
-def _write_csv(provider: str, index: Dict[str, Dict]) -> None:
+def _write_csv(provider: str, index: dict[str, dict]) -> None:
     import csv
 
     csv_path = _provider_dir(provider) / "responses.csv"
@@ -126,7 +126,7 @@ def _write_csv(provider: str, index: Dict[str, Dict]) -> None:
 
 
 def _seed(provider: str, prompt_id: str) -> int:
-    digest = hashlib.sha256(f"{provider}:{prompt_id}".encode("utf-8")).digest()
+    digest = hashlib.sha256(f"{provider}:{prompt_id}".encode()).digest()
     return int.from_bytes(digest[:8], "big")
 
 
@@ -134,7 +134,7 @@ def _rng(provider: str, prompt_id: str) -> random.Random:
     return random.Random(_seed(provider, prompt_id))
 
 
-def _base_template(prompt: Dict, provider: str, rng: random.Random) -> str:
+def _base_template(prompt: dict, provider: str, rng: random.Random) -> str:
     category = prompt.get("category", "General")
     expected = prompt.get("expected_keywords", [])
     intro_options = [
@@ -192,7 +192,7 @@ def _simulate_metrics(
     prompt_text: str,
     system_prompt: str,
     response_text: str,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     settings = PROVIDERS[provider]
     rng = random.Random(_seed(provider, response_text))
     mean_latency, std_latency = settings["latency_ms"]
@@ -220,10 +220,10 @@ def _simulate_metrics(
 def _build_record(
     provider: str,
     model_name: str,
-    prompt: Dict,
+    prompt: dict,
     prompt_text: str,
     system_prompt: str,
-) -> Dict:
+) -> dict:
     prompt_id = prompt["id"]
     rng = _rng(provider, prompt_id)
     response_text = _base_template(prompt, provider, rng)
@@ -259,7 +259,7 @@ def _ensure_record(
     prompt_id: str,
     prompt_text: str,
     system_prompt: str,
-) -> Dict:
+) -> dict:
     index = _load_index(provider)
     if prompt_id not in index:
         prompt_catalog = _load_prompts()
@@ -287,7 +287,7 @@ def call_mock_api(
     model_name: str,
     prompt_text: str,
     system_prompt: str,
-) -> Dict:
+) -> dict:
     """Return a synthetic completion for the requested provider."""
 
     provider_key = provider.lower()
@@ -341,7 +341,7 @@ def call_mock_api(
     }
 
 
-def ensure_synthetic_runs(providers: Optional[Iterable[str]] = None) -> None:
+def ensure_synthetic_runs(providers: Iterable[str] | None = None) -> None:
     """Generate synthetic data for all prompts for the specified providers."""
 
     target_providers = providers or PROVIDERS.keys()

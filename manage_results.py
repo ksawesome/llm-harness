@@ -3,13 +3,12 @@ Result Management and Cleanup Script
 Archives old results, compresses large files, and manages storage.
 """
 
+import argparse
 import gzip
+import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict
-import argparse
-import logging
 
 
 class ResultManager:
@@ -35,19 +34,19 @@ class ResultManager:
         )
         self.logger = logging.getLogger(__name__)
 
-    def get_csv_files(self) -> List[Path]:
+    def get_csv_files(self) -> list[Path]:
         """Get all CSV files in the results directory."""
         if not self.raw_output_dir.exists():
             return []
 
         return list(self.raw_output_dir.glob("*.csv"))
 
-    def get_synthetic_csv_files(self) -> List[Path]:
+    def get_synthetic_csv_files(self) -> list[Path]:
         """Get synthetic response CSV files."""
         if not self.synthetic_dir.exists():
             return []
 
-        csv_files: List[Path] = []
+        csv_files: list[Path] = []
         for provider_dir in self.synthetic_dir.iterdir():
             if not provider_dir.is_dir():
                 continue
@@ -56,7 +55,7 @@ class ResultManager:
                 csv_files.append(responses)
         return csv_files
 
-    def get_file_info(self, file_path: Path) -> Dict:
+    def get_file_info(self, file_path: Path) -> dict:
         """Get information about a file."""
         stat = file_path.stat()
         return {
@@ -70,7 +69,7 @@ class ResultManager:
 
     def compress_large_files(
         self, size_threshold_mb: float = 10.0
-    ) -> List[Path]:
+    ) -> list[Path]:
         """Compress CSV files larger than threshold."""
         compressed_files = []
         csv_files = self.get_csv_files() + self.get_synthetic_csv_files()
@@ -95,7 +94,7 @@ class ResultManager:
 
         return compressed_files
 
-    def archive_old_files(self, days_threshold: int = 30) -> List[Path]:
+    def archive_old_files(self, days_threshold: int = 30) -> list[Path]:
         """Archive files older than threshold."""
         archived_files = []
         csv_files = self.get_csv_files() + self.get_synthetic_csv_files()
@@ -114,7 +113,7 @@ class ResultManager:
 
         return archived_files
 
-    def cleanup_empty_directories(self) -> List[Path]:
+    def cleanup_empty_directories(self) -> list[Path]:
         """Remove empty directories."""
         cleaned_dirs = []
 
@@ -134,7 +133,7 @@ class ResultManager:
 
         return cleaned_dirs
 
-    def get_storage_stats(self) -> Dict:
+    def get_storage_stats(self) -> dict:
         """Get storage statistics."""
         stats = {
             "total_files": 0,
@@ -169,7 +168,7 @@ class ResultManager:
             ]
             stats["synthetic_providers"] = len(provider_dirs)
 
-            synthetic_files: List[Path] = []
+            synthetic_files: list[Path] = []
             for provider in provider_dirs:
                 synthetic_files.extend(provider.glob("*.json"))
                 responses_csv = provider / "responses.csv"
@@ -189,7 +188,7 @@ class ResultManager:
         self,
         compress_threshold_mb: float = 10.0,
         archive_threshold_days: int = 30,
-    ) -> Dict:
+    ) -> dict:
         """Run complete maintenance routine."""
         self.logger.info("Starting result maintenance...")
 
