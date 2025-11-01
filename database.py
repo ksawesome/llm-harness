@@ -77,6 +77,12 @@ class BenchmarkDatabase:
             self._ensure_column(
                 conn, "benchmark_results", "synthetic_source", "TEXT"
             )
+            self._ensure_column(
+                conn, "benchmark_results", "scope_width", "TEXT"
+            )
+            self._ensure_column(
+                conn, "benchmark_results", "scope_width_score", "REAL"
+            )
 
             conn.execute(
                 """

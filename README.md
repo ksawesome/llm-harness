@@ -14,10 +14,11 @@ The benchmark currently targets five providers (OpenAI, Anthropic, Google, Coher
 
 - **Multi-Model Support**: Evaluate multiple LLM providers (OpenAI, Anthropic, Google, Cohere, Hugging Face) in a single, consistent pipeline.
 - **Parallel Processing**: Concurrent API calls with per-model rate limiting to maximize throughput while respecting quotas.
-- **Comprehensive Metrics**: Track latency, token usage, cost estimates, response length, and custom quality scores.
+- **Comprehensive Metrics**: Track latency, token usage, cost estimates, response length, **scope width**, and custom quality scores.
 - **Robust Error Handling**: Automatic retries with exponential backoff and deterministic synthetic fallback on failure.
 - **Modern Web UI**: Dashboard with run exploration, KPI panels, and downloadable artifacts.
 - **Extensive Testing**: Pytest-based test suite covering adapters, configuration validation, and orchestration logic.
+- **Human Trial Support**: 120-prompt bank with Google Form template for scope width evaluation.
 
 ### 2.1 Benchmark Orchestration
 
@@ -36,12 +37,14 @@ The benchmark currently targets five providers (OpenAI, Anthropic, Google, Coher
 - PDF/HTML report generation with PNG exports for slides and documentation.
 - Comparative analytics including statistical tests and radar charts.
 - Optional LLM-as-judge workflow for qualitative scoring using strong judge models.
+- **Scope Width Analysis**: Automated assessment of response focus (narrow/appropriate/too broad).
 
 ### 2.4 Data Management and Persistence
 
 - Prompt schema validation and Jinja2 templating for dynamic prompt generation.
 - CSV outputs stored under `results/raw_output/`; optional persistence to SQLite via `database.py`.
 - Utilities for archiving, compressing, and pruning historical results.
+- **Extended prompt bank**: 120 prompts across 6 categories with scope width ground truth.
 
 ### 2.5 Developer Experience
 
@@ -208,7 +211,48 @@ The dashboard listens on port 5000 by default (http://127.0.0.1:5000/). The web 
 
 *For architecture and deployment notes, see `docs/technical-handbook.md`.*
 
-## 11. Testing and Quality Assurance
+## 11. Scope Width Evaluation
+
+### 11.1 What is Scope Width?
+
+**Scope width** measures whether an LLM response maintains appropriate pedagogical boundaries:
+
+- **Narrow (score 1-2)**: Response is unhelpfully minimal, missing necessary context
+- **Appropriate (score 3-4)**: Well-focused, provides relevant guidance without solving the problem
+- **Too Broad (score 5-6)**: Includes excessive tangents, unrelated topics, or meta-discussion
+
+### 11.2 Automated Analysis
+
+Run scope width analysis on benchmark results:
+
+```bash
+python -m analysis.scope_width_analysis results/raw_output/benchmark_results_20251013.csv
+```
+
+This generates:
+- Scope distribution percentages (narrow/appropriate/too_broad)
+- Average scope score (1-6 scale)
+- Confidence ratings for each assessment
+- Detailed JSON output saved alongside results
+
+### 11.3 Human Evaluation Trials
+
+The repository includes infrastructure for human trials:
+
+1. **120-prompt bank** (`data/test_prompts_120.json`): Diverse engineering scenarios with ground-truth scope labels
+2. **Google Form template** (`data/human_trials_google_form_template.md`): Structured evaluation rubric
+3. **Category distribution**: Socratic Probing (28), Contextualization (26), Feedback (24), Edge Cases (14), Safety (10), Templates (2)
+
+#### Running Human Trials:
+
+1. Generate LLM responses for all 120 prompts using the benchmark harness
+2. Create 6 Google Form variants (20 prompts each, balanced across categories)
+3. Recruit 15-20 evaluators per variant (90-120 total evaluations)
+4. Analyze inter-rater reliability and compare human vs. automated scope assessments
+
+See `data/human_trials_google_form_template.md` for complete implementation details, rubric definitions, and analysis scripts.
+
+## 12. Testing and Quality Assurance
 
 - Run all tests locally:
 
@@ -231,19 +275,20 @@ pytest tests/test_main.py -k synthetic
 
 *For CI configuration and detailed testing workflows, see `docs/technical-handbook.md`.*
 
-## 12. Performance and Reliability Practices
+## 13. Performance and Reliability Practices
 
 - Use `RateLimiter` to enforce per-model throttling and avoid quota violations.
 - CSV writes are append-only and atomic; SQLite used for optional persistence.
 - Synthetic responses are deterministic (seeded) to support reproducible regression tests.
 
-## 13. Version History
+## 14. Version History
 
 - **v0.1.0** — Foundational benchmarking and dashboard skeleton.
 - **v0.1.1** — Token accounting and validation improvements.
 - **v0.1.2** — Data lifecycle utilities and visualization additions.
 - **v0.1.3** — Synthetic fallback and reporting enhancements.
 - **v0.1.4** — Observability, import tests, and documentation overhaul.
+- **v0.2.0** — Scope width metric, 120-prompt bank, and human trial infrastructure.
 
 ## 14. Troubleshooting and Support
 

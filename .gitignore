@@ -248,3 +248,5 @@ test_successful_responses.csv
 *.db
 *.sqlite3
 benchmark_*.log
+
+temp/
